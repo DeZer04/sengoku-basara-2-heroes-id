@@ -1,0 +1,6 @@
+# game images and patch binaries are never committed (patches go to Releases)
+*.iso
+*.bin
+*.chd
+*.patch
+*.xdelta

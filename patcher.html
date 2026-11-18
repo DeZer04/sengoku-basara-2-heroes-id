@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Patcher Basara 2 ID</title>
+<style>
+:root {
+  --bg: #f4f1ea; --card: #fffdf8; --fg: #1d1b18; --muted: #6b655c; --line: #ddd5c6;
+  --accent: #a3201a; --accent-fg: #fff; --gold: #b8892b; --ok: #1f7a3a; --bad: #b3261e; --bar: #e8e1d3;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15130f; --card: #1f1c17; --fg: #eee8dc; --muted: #a39b8e; --line: #3a352d;
+    --accent: #d2382d; --accent-fg: #fff; --gold: #d9aa4a; --ok: #5cc27a; --bad: #ff7a6e; --bar: #2d2922;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15130f; --card: #1f1c17; --fg: #eee8dc; --muted: #a39b8e; --line: #3a352d;
+  --accent: #d2382d; --accent-fg: #fff; --gold: #d9aa4a; --ok: #5cc27a; --bad: #ff7a6e; --bar: #2d2922;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 600px; margin: 0 auto; padding: 24px 16px 40px; }
+header { border-left: 5px solid var(--accent); padding: 2px 0 2px 14px; margin-bottom: 22px; }
+header h1 { font-size: 1.45rem; line-height: 1.2; margin: 0; letter-spacing: .01em; }
+header p { margin: 4px 0 0; color: var(--muted); }
+.step { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.step h2 { font-size: 1rem; margin: 0 0 10px; display: flex; gap: 10px; align-items: center; }
+.num { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--gold); color: #fff; font-size: .85rem;
+       display: inline-flex; align-items: center; justify-content: center; }
+.pick { display: inline-block; position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 8px;
+        padding: 9px 14px; cursor: pointer; background: var(--bg); font-weight: 600; }
+.pick input { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
+.pick:focus-within { outline: 2px solid var(--gold); outline-offset: 2px; }
+.file { margin-top: 8px; font-size: .9rem; color: var(--muted); word-break: break-all; }
+.st { margin-top: 6px; font-size: .92rem; }
+.st.ok { color: var(--ok); } .st.bad { color: var(--bad); }
+button#go { width: 100%; border: 0; border-radius: 10px; padding: 14px; font: inherit; font-weight: 700; font-size: 1.05rem;
+            background: var(--accent); color: var(--accent-fg); cursor: pointer; }
+button#go:disabled { opacity: .45; cursor: not-allowed; }
+.opt { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; font-size: .9rem; color: var(--muted); }
+.opt input { margin-top: 4px; }
+.bar { height: 10px; border-radius: 6px; background: var(--bar); overflow: hidden; margin-top: 14px; }
+.bar div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--gold)); transition: width .15s; }
+#stage { margin-top: 8px; font-size: .92rem; display: flex; justify-content: space-between; gap: 10px; }
+#stage span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+#msg { margin-top: 12px; padding: 12px; border-radius: 8px; display: none; font-size: .95rem; }
+#msg.ok { display: block; background: color-mix(in srgb, var(--ok) 14%, transparent); }
+#msg.bad { display: block; background: color-mix(in srgb, var(--bad) 14%, transparent); }
+#msg.info { display: block; background: color-mix(in srgb, var(--gold) 16%, transparent); }
+.mode { font-size: .85rem; color: var(--muted); margin-top: 10px; }
+details { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+summary { cursor: pointer; font-weight: 600; }
+details li { margin: 6px 0; }
+footer { margin-top: 24px; font-size: .82rem; color: var(--muted); }
+.free { margin: 14px 0 0; padding: 10px 12px; border: 2px solid #c8962a; border-radius: 8px; font-size: .92rem; }
+.free b { color: #c8962a; }
+.free a, footer a { color: inherit; }
+code { font-size: .88em; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Sengoku Basara 2 Heroes</h1>
+    <p>Patcher terjemahan Bahasa Indonesia &middot; patched by <b>DeZer04</b></p>
+    <p class="free"><b>GRATIS.</b> Patch ini dibagikan gratis di GitHub: <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id">github.com/DeZer04/sengoku-basara-2-heroes-id</a>. Kalau kamu membayar untuk mendapatkannya, kamu tertipu. Dilarang menjual patch ini atau ISO hasil patch.</p>
+  </header>
+
+  <section class="step">
+    <h2><span class="num">1</span>ISO asli (Jepang)</h2>
+    <label class="pick">Pilih file ISO<input type="file" id="iso"></label>
+    <div class="file" id="iso-name"></div>
+    <div class="st" id="iso-st"></div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">2</span>File patch</h2>
+    <label class="pick">Pilih file .patch<input type="file" id="patch"></label>
+    <div class="file" id="patch-name"></div>
+    <div class="st" id="patch-st"></div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">3</span>Buat ISO terjemahan</h2>
+    <button id="go" disabled>Patch sekarang</button>
+    <label class="opt" id="full-wrap" hidden><input type="checkbox" id="full"> Periksa seluruh ISO asli sebelum mulai
+      (lebih lama, tapi memastikan ISO-mu benar-benar dump yang tepat)</label>
+    <div class="bar"><div id="bar"></div></div>
+    <div id="stage"><span id="stage-t">Pilih ISO asli dan file patch.</span><span id="stage-p"></span></div>
+    <div id="msg"></div>
+    <div class="mode" id="mode"></div>
+  </section>
+
+  <details>
+    <summary>Bantuan</summary>
+    <ul>
+      <li>ISO yang dibutuhkan: <b>Sengoku Basara 2 - Heroes (Japan)</b> (SLPM-66848), 4.677.795.840 byte,
+        satu file .iso. Kalau ISO-mu .chd/.cso/.7z, ubah atau ekstrak dulu ke .iso.</li>
+      <li>Butuh ruang kosong ±4,7 GB untuk ISO baru. ISO asli tidak diubah.</li>
+      <li>Di Chrome/Edge (PC, Mac, Android) kamu memilih lokasi simpan dulu, lalu ISO baru ditulis langsung dan
+        diperiksa otomatis. Di Firefox/Safari hasilnya diunduh seperti file biasa; tunggu sampai unduhan selesai.</li>
+      <li>Android: biarkan layar menyala dan jangan pindah aplikasi sampai selesai. Hasilnya bisa langsung dibuka
+        di ARMSX2, AetherSX2 atau NetherSX2.</li>
+      <li>Semua proses terjadi di perangkatmu. Tidak ada file yang diunggah ke mana pun.</li>
+    </ul>
+  </details>
+  <footer>Patched by DeZer04 &middot; <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id">github.com/DeZer04/sengoku-basara-2-heroes-id</a><br>Terjemahan buatan penggemar, gratis, bukan untuk dijual. Game, karakter, gambar dan musik milik CAPCOM.</footer>
+</main>
+
+<script>
+// ==CORE== patch format BSR2IDP2 (see make_patch.py); this block is also run by patcher_test.mjs under Node
+const MAGIC = 'BSR2IDP2', HDR = 96, RUN = 12, BLK = 2048, CHUNK = 8 << 20;
+
+const CRC_T = (() => {                          // slicing-by-8 tables for CRC-32 (same values as zlib.crc32)
+  const t = new Uint32Array(2048);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+    t[i] = c;
+  }
+  for (let i = 0; i < 256; i++)
+    for (let s = 1; s < 8; s++) t[s * 256 + i] = (t[(s - 1) * 256 + i] >>> 8) ^ t[t[(s - 1) * 256 + i] & 255];
+  return t;
+})();
+
+function crc32(u8, crc = 0) {
+  const T = CRC_T, n = u8.length;
+  let c = ~crc, i = 0;
+  for (; i + 8 <= n; i += 8) {
+    c ^= u8[i] | u8[i + 1] << 8 | u8[i + 2] << 16 | u8[i + 3] << 24;
+    c = T[1792 + (c & 255)] ^ T[1536 + (c >>> 8 & 255)] ^ T[1280 + (c >>> 16 & 255)] ^ T[1024 + (c >>> 24)] ^
+        T[768 + u8[i + 4]] ^ T[512 + u8[i + 5]] ^ T[256 + u8[i + 6]] ^ T[u8[i + 7]];
+  }
+  for (; i < n; i++) c = T[(c ^ u8[i]) & 255] ^ (c >>> 8);
+  return ~c >>> 0;
+}
+
+async function readHeader(patch) {
+  const bad = () => new Error('Ini bukan file patch Basara 2 ID (atau filenya rusak).');
+  if (patch.size < HDR) throw bad();
+  const h = new DataView(await patch.slice(0, HDR).arrayBuffer());
+  const str = (o, n) => new TextDecoder().decode(new Uint8Array(h.buffer, o, n)).replace(/\0+$/, '');
+  const hex = o => Array.from(new Uint8Array(h.buffer, o, 20), b => b.toString(16).padStart(2, '0')).join('');
+  if (str(0, 8) !== MAGIC) throw bad();
+  const nruns = h.getUint32(32, true), dataOffset = HDR + RUN * nruns;
+  if (patch.size < dataOffset) throw bad();
+  const r = new DataView(await patch.slice(HDR, dataOffset).arrayBuffer());
+  const runs = [];
+  for (let i = 0; i < nruns; i++)
+    runs.push({ start: r.getUint32(i * RUN, true) * BLK, len: r.getUint32(i * RUN + 4, true) * BLK,
+                crc: r.getUint32(i * RUN + 8, true) });
+  return { version: str(8, 8), size: Number(h.getBigUint64(16, true)), dataLen: Number(h.getBigUint64(24, true)),
+           crcOrig: h.getUint32(36, true), crcOut: h.getUint32(40, true), sha1Orig: hex(44), sha1Out: hex(64),
+           runs, dataOffset };
+}
+
+const BROKEN = 'File patch rusak atau terpotong (unduhan tidak lengkap?). Unduh ulang file patch.';
+
+class Inflater {                                // reads the gzip data section as a byte stream
+  constructor(blob) {
+    this.r = blob.stream().pipeThrough(new DecompressionStream('gzip')).getReader();
+    this.buf = new Uint8Array(0); this.pos = 0;
+  }
+  async next() {                                // inflate errors (cut-off download, bad CRC) -> one clear message
+    try { return await this.r.read(); } catch (_) { throw new Error(BROKEN); }
+  }
+  async read(n) {                               // up to n bytes (at least 1)
+    if (this.pos >= this.buf.length) {
+      const { value, done } = await this.next();
+      if (done) throw new Error(BROKEN);
+      this.buf = value; this.pos = 0;
+    }
+    const k = Math.min(n, this.buf.length - this.pos);
+    this.pos += k;
+    return this.buf.subarray(this.pos - k, this.pos);
+  }
+  async readFull(n) {
+    const out = new Uint8Array(n);
+    for (let o = 0; o < n;) { const c = await this.read(n - o); out.set(c, o); o += c.length; }
+    return out;
+  }
+  async end() {                                 // the stream must end exactly here (gzip CRC is checked on the way)
+    if (this.pos < this.buf.length) throw new Error(BROKEN);
+    for (;;) {
+      const { value, done } = await this.next();
+      if (done) return;
+      if (value.length) throw new Error(BROKEN);
+    }
+  }
+}
+
+function* plan(h) {                             // the patched ISO as copied ranges of the original + patch runs
+  let pos = 0;
+  for (const run of h.runs) {
+    if (run.start > pos) yield { from: pos, to: run.start };
+    yield { run };
+    pos = run.start + run.len;
+  }
+  if (pos < h.size) yield { from: pos, to: h.size };
+}
+
+async function readRange(blob, a, b, each) {
+  for (let p = a; p < b; p += CHUNK) await each(new Uint8Array(await blob.slice(p, Math.min(p + CHUNK, b)).arrayBuffer()));
+}
+
+// quick check: right size, and the bytes the patch replaces are those of the expected dump -> null, 'size', 'content'
+async function checkOriginal(iso, h, progress = () => {}) {
+  if (iso.size !== h.size) return 'size';
+  const total = h.runs.reduce((a, r) => a + r.len, 0);
+  let done = 0;
+  for (const run of h.runs) {
+    let c = 0;
+    await readRange(iso, run.start, run.start + run.len, u8 => { c = crc32(u8, c); done += u8.length; progress(done / total); });
+    if (c !== run.crc) return 'content';
+  }
+  return null;
+}
+
+async function crcFile(blob, progress = () => {}) {
+  let c = 0, done = 0;
+  await readRange(blob, 0, blob.size, u8 => { c = crc32(u8, c); done += u8.length; progress(done / blob.size); });
+  return c;
+}
+
+// stream the patched ISO into sink.write(u8) (in order); returns its CRC-32
+async function writePatched(iso, patch, h, sink, progress = () => {}) {
+  const inf = new Inflater(patch.slice(h.dataOffset));
+  let crc = 0, done = 0;
+  const put = async u8 => { crc = crc32(u8, crc); await sink.write(u8); done += u8.length; progress(done / h.size); };
+  for (const s of plan(h)) {
+    if (s.run) for (let left = s.run.len; left > 0;) { const u8 = await inf.readFull(Math.min(left, CHUNK)); left -= u8.length; await put(u8); }
+    else await readRange(iso, s.from, s.to, put);
+  }
+  await inf.end();
+  return crc;
+}
+
+// the patched ISO as a Blob: unchanged ranges stay references into the original file (nothing is copied in memory)
+async function patchedBlob(iso, patch, h, progress = () => {}) {
+  const inf = new Inflater(patch.slice(h.dataOffset));
+  const parts = [];
+  let done = 0;
+  for (const s of plan(h)) {
+    if (s.run) for (let left = s.run.len; left > 0;) {
+      const u8 = await inf.readFull(Math.min(left, CHUNK));
+      parts.push(u8); left -= u8.length; done += u8.length; progress(done / h.dataLen);
+    }
+    else parts.push(iso.slice(s.from, s.to));
+  }
+  await inf.end();
+  return new Blob(parts, { type: 'application/octet-stream' });
+}
+// ==END CORE==
+
+const $ = id => document.getElementById(id);
+const FSA = typeof window.showSaveFilePicker === 'function' && window.self === window.top;
+const CAN = typeof DecompressionStream === 'function' && typeof Blob.prototype.stream === 'function';
+let iso = null, patch = null, hdr = null, busy = false;
+
+const gb = n => (n / 1e9).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' GB';
+const mb = n => Math.round(n / 1e6).toLocaleString('id-ID') + ' MB';
+function status(id, text, cls) { $(id).textContent = text; $(id).className = 'st ' + (cls || ''); }
+
+function refresh() {
+  if (iso && hdr) {
+    if (iso.size === hdr.size) status('iso-st', '✓ Ukuran cocok dengan ISO yang dibutuhkan.', 'ok');
+    else status('iso-st', '✗ Ukuran berbeda: ini bukan ISO Sengoku Basara 2 - Heroes (Japan) yang dibutuhkan.', 'bad');
+  }
+  $('go').disabled = busy || !CAN || !(iso && hdr && iso.size === hdr.size);
+}
+
+$('mode').textContent = !CAN ? 'Browser ini terlalu lama. Pakai Chrome, Edge, Firefox atau Safari versi terbaru.'
+  : FSA ? 'Mode: tulis langsung ke file + verifikasi otomatis.'
+  : 'Mode: unduhan (browser ini tidak bisa menulis file langsung). Untuk hasil terverifikasi, pakai Chrome/Edge.';
+$('full-wrap').hidden = FSA || !CAN;
+
+$('iso').addEventListener('change', e => {
+  iso = e.target.files[0] || null;
+  $('iso-name').textContent = iso ? `${iso.name} · ${gb(iso.size)}` : '';
+  status('iso-st', '');
+  refresh();
+});
+
+$('patch').addEventListener('change', async e => {
+  patch = e.target.files[0] || null; hdr = null;
+  $('patch-name').textContent = patch ? `${patch.name} · ${mb(patch.size)}` : '';
+  status('patch-st', '');
+  if (patch) {
+    try {
+      hdr = await readHeader(patch);
+      status('patch-st', `✓ Patch v${hdr.version} (${hdr.runs.length} bagian, ${mb(hdr.dataLen)} data baru).`, 'ok');
+    } catch (err) { status('patch-st', '✗ ' + err.message, 'bad'); }
+  }
+  refresh();
+});
+
+let lastUi = 0, t0 = 0;
+function stage(text) { $('stage-t').textContent = text; $('stage-p').textContent = ''; $('bar').style.width = '0'; t0 = performance.now(); lastUi = 0; }
+function prog(f) {
+  const now = performance.now();
+  if (now - lastUi < 120 && f < 1) return;
+  lastUi = now;
+  $('bar').style.width = (f * 100).toFixed(1) + '%';
+  const el = (now - t0) / 1000, left = f > 0.02 ? el / f - el : 0;
+  $('stage-p').textContent = Math.floor(f * 100) + '%' + (left > 3 ? ` · ±${left > 90 ? Math.round(left / 60) + ' mnt' : Math.round(left) + ' dtk'}` : '');
+}
+function message(html, cls) { $('msg').innerHTML = html; $('msg').className = cls; }
+
+const outName = () => `Sengoku Basara 2 Heroes (Indonesia v${hdr.version}).iso`;
+const BAD_ISO = 'ISO asli tidak cocok dengan dump yang dibutuhkan (isi berbeda). Pakai dump bersih ' +
+                'Sengoku Basara 2 - Heroes (Japan) yang sesuai Redump.';
+
+$('go').addEventListener('click', async () => {
+  let handle = null;
+  if (FSA) {                                    // the save dialog needs the click itself, so it comes first
+    try {
+      handle = await window.showSaveFilePicker({ suggestedName: outName(),
+        types: [{ description: 'ISO PS2', accept: { 'application/octet-stream': ['.iso'] } }] });
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      try { handle = await window.showSaveFilePicker({ suggestedName: outName() }); }
+      catch (err2) { if (err2.name === 'AbortError') return; handle = null; }
+    }
+  }
+  busy = true; refresh(); message('', '');
+  let lock = null;
+  try { lock = await navigator.wakeLock?.request('screen'); } catch (_) {}
+  const guard = e => { e.preventDefault(); e.returnValue = ''; };
+  window.addEventListener('beforeunload', guard);
+  try {
+    stage('Memeriksa ISO asli…');
+    const bad = await checkOriginal(iso, hdr, prog);
+    if (bad) throw new Error(bad === 'size' ? 'Ukuran ISO berbeda.' : BAD_ISO);
+    if (handle) {
+      const w = await handle.createWritable();
+      stage('Menulis ISO baru…');
+      let crc;
+      try { crc = await writePatched(iso, patch, hdr, w, prog); }
+      catch (err) { await w.abort().catch(() => {}); throw err; }
+      if (crc !== hdr.crcOut) {
+        await w.abort().catch(() => {});
+        throw new Error('ISO hasil tidak sesuai harapan (verifikasi gagal). ' + BAD_ISO);
+      }
+      stage('Menyimpan…');
+      await w.close();
+      prog(1); $('stage-t').textContent = 'Selesai.';
+      message(`<b>Berhasil!</b> ISO terjemahan tersimpan sebagai <code>${handle.name}</code> dan sudah diverifikasi.
+        Buka file itu di PCSX2, ARMSX2, AetherSX2/NetherSX2 atau OPL seperti biasa.`, 'ok');
+    } else {
+      if ($('full').checked) {
+        stage('Memeriksa seluruh ISO asli…');
+        if (await crcFile(iso, prog) !== hdr.crcOrig) throw new Error(BAD_ISO);
+      }
+      stage('Menyiapkan ISO baru…');
+      const blob = await patchedBlob(iso, patch, hdr, prog);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);       // kept alive: the download reads from it until it finishes
+      a.download = outName();
+      document.body.appendChild(a); a.click(); a.remove();
+      prog(1); $('stage-t').textContent = 'Unduhan dimulai.';
+      message(`<b>Unduhan ISO terjemahan dimulai</b> (${gb(blob.size)}). Biarkan halaman ini terbuka sampai unduhan
+        selesai, lalu buka file <code>${a.download}</code> di emulatormu.`, 'info');
+    }
+  } catch (err) {
+    $('stage-t').textContent = 'Gagal.';
+    message('<b>Gagal:</b> ' + (err && err.message ? err.message : String(err)).replace(/</g, '&lt;'), 'bad');
+  } finally {
+    window.removeEventListener('beforeunload', guard);
+    try { await lock?.release(); } catch (_) {}
+    busy = false; refresh();
+  }
+});
+</script>
+</body>
+</html>
