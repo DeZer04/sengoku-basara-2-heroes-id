@@ -41,8 +41,8 @@ SHA-1   : 96F0C5894ED98CDCCD6EBE10FF60B32D6BDEE2C8
 Kalau checksum berbeda, patch tidak akan bekerja dengan benar.
 
 ISO HASIL PATCH v0.98 (untuk memastikan patch terpasang sempurna)
-Terjemahan            SHA-1 : 31F6FBF743CEAD5C5461603353C60464A3C540A5
-Terjemahan + koban x10 SHA-1 : 356F4C3862DCAF4E4BFA15212F3280B86B2BEB6A
+Terjemahan            SHA-1 : E3DEA5F4BFD2134213251495CF644AFE307B6739
+Terjemahan + koban x10 SHA-1 : 21F7F9B9BF07CAC43FD4858F74BEDB147F6D0851
 
 ------------------------------------------------------------------
 PILIH VARIAN
