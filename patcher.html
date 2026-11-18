@@ -90,8 +90,8 @@ code { font-size: .88em; }
   <section class="step">
     <h2><span class="num">3</span>Buat ISO terjemahan</h2>
     <button id="go" disabled>Patch sekarang</button>
-    <label class="opt" id="full-wrap" hidden><input type="checkbox" id="full"> Periksa seluruh ISO asli sebelum mulai
-      (lebih lama, tapi memastikan ISO-mu benar-benar dump yang tepat)</label>
+    <label class="opt" id="full-wrap" hidden><input type="checkbox" id="full"> Periksa ISO (lebih aman, tapi lebih lama).
+      Tanpa dicentang, patch langsung dipasang tanpa verifikasi — lebih cepat.</label>
     <div class="bar"><div id="bar"></div></div>
     <div id="stage"><span id="stage-t">Pilih ISO asli dan file patch.</span><span id="stage-p"></span></div>
     <div id="msg"></div>
@@ -104,8 +104,8 @@ code { font-size: .88em; }
       <li>ISO yang dibutuhkan: <b>Sengoku Basara 2 - Heroes (Japan)</b> (SLPM-66848), 4.677.795.840 byte,
         satu file .iso. Kalau ISO-mu .chd/.cso/.7z, ubah atau ekstrak dulu ke .iso.</li>
       <li>Butuh ruang kosong ±4,7 GB untuk ISO baru. ISO asli tidak diubah.</li>
-      <li>Di Chrome/Edge (PC, Mac, Android) kamu memilih lokasi simpan dulu, lalu ISO baru ditulis langsung dan
-        diperiksa otomatis. Di Firefox/Safari hasilnya diunduh seperti file biasa; tunggu sampai unduhan selesai.</li>
+      <li>Di Chrome/Edge (PC, Mac, Android) kamu memilih lokasi simpan dulu, lalu ISO baru ditulis langsung (cepat;
+        centang "Periksa ISO" kalau mau diverifikasi). Di Firefox/Safari hasilnya diunduh seperti file biasa; tunggu sampai unduhan selesai.</li>
       <li>Android: biarkan layar menyala dan jangan pindah aplikasi sampai selesai. Hasilnya bisa langsung dibuka
         di ARMSX2, AetherSX2 atau NetherSX2.</li>
       <li>Semua proses terjadi di perangkatmu. Tidak ada file yang diunggah ke mana pun.</li>
@@ -277,9 +277,9 @@ function refresh() {
 }
 
 $('mode').textContent = !CAN ? 'Browser ini terlalu lama. Pakai Chrome, Edge, Firefox atau Safari versi terbaru.'
-  : FSA ? 'Mode: tulis langsung ke file + verifikasi otomatis.'
-  : 'Mode: unduhan (browser ini tidak bisa menulis file langsung). Untuk hasil terverifikasi, pakai Chrome/Edge.';
-$('full-wrap').hidden = FSA || !CAN;
+  : FSA ? 'Mode: tulis langsung ke file (cepat, tanpa verifikasi kecuali kamu mencentang Periksa ISO).'
+  : 'Mode: unduhan (browser ini tidak bisa menulis file langsung).';
+$('full-wrap').hidden = !CAN;
 
 $('iso').addEventListener('change', e => {
   iso = e.target.files[0] || null;
@@ -335,29 +335,28 @@ $('go').addEventListener('click', async () => {
   const guard = e => { e.preventDefault(); e.returnValue = ''; };
   window.addEventListener('beforeunload', guard);
   try {
-    stage('Memeriksa ISO asli…');
-    const bad = await checkOriginal(iso, hdr, prog);
-    if (bad) throw new Error(bad === 'size' ? 'Ukuran ISO berbeda.' : BAD_ISO);
+    const verify = $('full').checked;
+    if (verify) {
+      stage('Memeriksa ISO asli…');
+      const bad = await checkOriginal(iso, hdr, prog);
+      if (bad) throw new Error(bad === 'size' ? 'Ukuran ISO berbeda.' : BAD_ISO);
+    }
     if (handle) {
       const w = await handle.createWritable();
       stage('Menulis ISO baru…');
       let crc;
       try { crc = await writePatched(iso, patch, hdr, w, prog); }
       catch (err) { await w.abort().catch(() => {}); throw err; }
-      if (crc !== hdr.crcOut) {
+      if (verify && crc !== hdr.crcOut) {
         await w.abort().catch(() => {});
         throw new Error('ISO hasil tidak sesuai harapan (verifikasi gagal). ' + BAD_ISO);
       }
       stage('Menyimpan…');
       await w.close();
       prog(1); $('stage-t').textContent = 'Selesai.';
-      message(`<b>Berhasil!</b> ISO terjemahan tersimpan sebagai <code>${handle.name}</code> dan sudah diverifikasi.
+      message(`<b>Berhasil!</b> ISO terjemahan tersimpan sebagai <code>${handle.name}</code>${verify ? ' dan sudah diverifikasi' : ''}.
         Buka file itu di PCSX2, ARMSX2, AetherSX2/NetherSX2 atau OPL seperti biasa.`, 'ok');
     } else {
-      if ($('full').checked) {
-        stage('Memeriksa seluruh ISO asli…');
-        if (await crcFile(iso, prog) !== hdr.crcOrig) throw new Error(BAD_ISO);
-      }
       stage('Menyiapkan ISO baru…');
       const blob = await patchedBlob(iso, patch, hdr, prog);
       const a = document.createElement('a');
