@@ -3,6 +3,8 @@
 Patch terjemahan penggemar untuk **Sengoku Basara 2 Heroes** (PlayStation 2, Jepang, SLPM-66848).
 Patched by **DeZer04**.
 
+**Halaman unduh & patcher online: https://dezer04.github.io/sengoku-basara-2-heroes-id/**
+
 > **GRATIS.** Patch ini dibagikan gratis di halaman ini. Kalau kamu membayar untuk mendapatkannya, kamu tertipu.
 > Dilarang menjual patch ini maupun ISO hasil patch.
 
