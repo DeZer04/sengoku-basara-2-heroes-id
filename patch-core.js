@@ -115,16 +115,28 @@ async function crcFile(blob, progress = () => {}) {
 }
 
 // stream the patched ISO into sink.write(u8) (in order); returns its CRC-32, or -1 when opts.skipCrc is set
-// (skipping the checksum saves a full output-size pass through crc32 on the fast path)
+// (skipping the checksum saves a full output-size pass through crc32 on the fast path).
+// Small segments (this patch has tens of thousands of short runs + copy gaps) are coalesced into >=FLUSH
+// writes so the download isn't throttled by per-write overhead across the page/worker -> service worker hop.
 async function writePatched(iso, patch, h, sink, progress = () => {}, opts = {}) {
   const inf = new Inflater(patch.slice(h.dataOffset));
   const doCrc = !opts.skipCrc;
+  const FLUSH = 4 << 20;
   let crc = 0, done = 0;
-  const put = async u8 => { if (doCrc) crc = crc32(u8, crc); await sink.write(u8); done += u8.length; progress(done / h.size); };
+  let buf = new Uint8Array(FLUSH), used = 0;
+  const flush = async () => { if (used) { await sink.write(buf.slice(0, used)); used = 0; } };
+  const put = async u8 => {
+    if (doCrc) crc = crc32(u8, crc);
+    done += u8.length; progress(done / h.size);
+    if (u8.length >= FLUSH) { await flush(); await sink.write(u8); return; }   // already big -> send as-is
+    if (used + u8.length > FLUSH) await flush();
+    buf.set(u8, used); used += u8.length;
+  };
   for (const s of plan(h)) {
     if (s.run) for (let left = s.run.len; left > 0;) { const u8 = await inf.readFull(Math.min(left, CHUNK)); left -= u8.length; await put(u8); }
     else await readRange(iso, s.from, s.to, put);
   }
+  await flush();
   await inf.end();
   return doCrc ? crc : -1;
 }

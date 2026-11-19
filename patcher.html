@@ -196,7 +196,8 @@ async function swChannel(name, size) {
   const sw = reg.active || navigator.serviceWorker.controller;
   if (!sw) throw { unsupported: true };
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
-  const ts = new TransformStream();
+  const big = () => { try { return new ByteLengthQueuingStrategy({ highWaterMark: 16 << 20 }); } catch (_) { return undefined; } };
+  const ts = new TransformStream(undefined, big(), big());   // allow ~16 MB in flight -> fewer backpressure stalls
   try {
     await new Promise((resolve, reject) => {                     // wait until the worker has the stream mapped
       const onmsg = e => {
