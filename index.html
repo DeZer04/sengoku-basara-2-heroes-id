@@ -140,7 +140,7 @@ footer p { margin: 0 0 8px; }
 <section class="band" id="unduh">
   <div class="wrap">
     <h2>Unduh</h2>
-    <p class="lede">Ambil <b>FULL ISO</b> yang sudah siap pakai, atau pilih varian <b>.patch</b> untuk patcher di browser dan <b>.xdelta</b> untuk DeltaPatcher / xdelta UI.</p>
+    <p class="lede">Ambil <b>FULL ISO</b> yang sudah siap pakai, atau file <b>.xdelta</b> (kecil) lalu pasang sendiri lewat <a href="patcher.html">patcher di browser</a>, DeltaPatcher, atau xdelta.</p>
     <div class="dl">
       <div class="dl-row">
         <div><h3>LINK Download FULL ISO</h3><p>ISO siap pakai dalam format full.</p></div>
@@ -152,15 +152,13 @@ footer p { margin: 0 0 8px; }
       <div class="dl-row">
         <div><h3>Terjemahan <span class="tag">Disarankan</span></h3><p>Semua terjemahan, tanpa perubahan lain.</p></div>
         <div class="dl-links">
-          <a class="main" href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/download/v0.98/basara2_id_v0.98.patch">.patch · 574 MB</a>
-          <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/download/v0.98/basara2_id_v0.98.xdelta">.xdelta · 519 MB</a>
+          <a class="main" href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/download/v0.98/basara2_id_v0.98.xdelta">.xdelta · 519 MB</a>
         </div>
       </div>
       <div class="dl-row">
         <div><h3>Terjemahan + koban ×10</h3><p>Semua koban (uang) yang didapat dikali 10. Batas uang dari game tetap berlaku.</p></div>
         <div class="dl-links">
-          <a class="main" href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/download/v0.98/basara2_id_v0.98_koban10.patch">.patch · 574 MB</a>
-          <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/download/v0.98/basara2_id_v0.98_koban10.xdelta">.xdelta · 519 MB</a>
+          <a class="main" href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/download/v0.98/basara2_id_v0.98_koban10.xdelta">.xdelta · 519 MB</a>
         </div>
       </div>
     </div>
@@ -173,16 +171,16 @@ footer p { margin: 0 0 8px; }
     <p class="lede">Kamu butuh ISO <b>Sengoku Basara 2 - Heroes (Japan)</b> milikmu sendiri. Paket ini tidak berisi game.</p>
     <div class="steps">
       <div class="step">
-        <h3>Patch di browser</h3>
-        <p>Buka <a href="patcher.html">patcher</a> di Chrome atau Edge (juga di HP Android). Pilih ISO asli dan file <code>.patch</code>, lalu klik <b>Patch sekarang</b>. Semua proses di perangkatmu, tidak ada yang diunggah.</p>
+        <h3>Patch di browser <span class="tag">Disarankan</span></h3>
+        <p>Buka <a href="patcher.html">patcher</a> di Chrome/Edge (juga di HP Android). Pilih ISO asli dan file <code>.xdelta</code>, lalu klik <b>Patch sekarang</b> — memakai mesin xdelta3 asli, cepat. Semua proses di perangkatmu, tidak ada yang diunggah.</p>
       </div>
       <div class="step">
-        <h3>xdelta</h3>
-        <p>Pakai DeltaPatcher atau xdelta UI, atau baris perintah:<br><code>xdelta3 -d -s "ISO asli.iso" basara2_id_v0.98.xdelta "ISO hasil.iso"</code></p>
+        <h3>DeltaPatcher (HP/PC)</h3>
+        <p>Aplikasi DeltaPatcher (Android/Windows): pilih ISO asli sebagai sumber dan file <code>.xdelta</code> sebagai patch, lalu Apply.</p>
       </div>
       <div class="step">
-        <h3>Python</h3>
-        <p>Untuk yang punya Python 3:<br><code>python apply_patch.py "ISO asli.iso" "ISO hasil.iso" basara2_id_v0.98.patch</code><br>SHA-1 dicek otomatis.</p>
+        <h3>Baris perintah</h3>
+        <p>Pakai xdelta3:<br><code>xdelta3 -d -s "ISO asli.iso" basara2_id_v0.98.xdelta "ISO hasil.iso"</code></p>
       </div>
     </div>
     <div class="tbl">
