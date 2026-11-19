@@ -82,7 +82,7 @@ code { font-size: .88em; }
 
   <section class="step">
     <h2><span class="num">2</span>File patch</h2>
-    <label class="pick">Pilih file .xdelta / .patch<input type="file" id="patch"></label>
+    <label class="pick">Pilih file .xdelta<input type="file" id="patch" accept=".xdelta"></label>
     <div class="file" id="patch-name"></div>
     <div class="st" id="patch-st"></div>
   </section>
@@ -117,18 +117,11 @@ code { font-size: .88em; }
 <br>Mesin patch .xdelta: <a href="https://github.com/kotcrab/xdelta-wasm">xdelta3 via kotcrab/xdelta-wasm</a> (Apache-2.0).</footer>
 </main>
 
-<script src="patch-core.js"></script>
 <script>
 
 const $ = id => document.getElementById(id);
 const FSA = typeof window.showSaveFilePicker === 'function' && window.self === window.top;
-const CAN = typeof DecompressionStream === 'function' && typeof Blob.prototype.stream === 'function';
-const CAN_TRANSFER_STREAM = (() => {            // can we hand a stream to the service worker / a Web Worker?
-  try { const mc = new MessageChannel(), t = new TransformStream();
-        mc.port1.postMessage(t.readable, [t.readable]); mc.port1.close(); mc.port2.close(); return true; }
-  catch (_) { return false; }
-})();
-const WORKER_OK = typeof Worker === 'function' && CAN_TRANSFER_STREAM;   // run the apply off the main thread
+const CAN = typeof Worker === 'function';       // the xdelta3 engine runs in a (module) Web Worker
 let iso = null, patch = null, hdr = null, busy = false;
 
 const gb = n => (n / 1e9).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' GB';
@@ -136,29 +129,23 @@ const mb = n => Math.round(n / 1e6).toLocaleString('id-ID') + ' MB';
 function status(id, text, cls) { $(id).textContent = text; $(id).className = 'st ' + (cls || ''); }
 
 function refresh() {
-  if (iso && hdr) {
-    if (hdr.xdelta) status('iso-st', '✓ ISO dipilih. Kecocokan diperiksa otomatis saat memproses.', 'ok');
-    else if (iso.size === hdr.size) status('iso-st', '✓ Ukuran cocok dengan ISO yang dibutuhkan.', 'ok');
-    else status('iso-st', '✗ Ukuran berbeda: ini bukan ISO Sengoku Basara 2 - Heroes (Japan) yang dibutuhkan.', 'bad');
-  }
-  $('go').disabled = busy || !CAN || !(iso && hdr && (hdr.xdelta || iso.size === hdr.size));
+  if (iso && hdr) status('iso-st', '✓ ISO dipilih. Kecocokan diperiksa otomatis saat memproses.', 'ok');
+  $('go').disabled = busy || !CAN || !(iso && hdr);
 }
 
-// peek the patch file: VCDIFF (xdelta3) magic D6 C3 C4 -> xdelta engine; otherwise our BSR2IDP2 header
+// this patcher accepts ONLY .xdelta: require the VCDIFF (xdelta3) magic D6 C3 C4
 async function readPatchInfo(p) {
   const m = new Uint8Array(await p.slice(0, 4).arrayBuffer());
-  if (m[0] === 0xd6 && m[1] === 0xc3 && m[2] === 0xc4) {
-    const v = /v([0-9][0-9a-z._-]*?)(?:_|\.xdelta|$)/i.exec(p.name || '');
-    return { xdelta: true, version: v ? v[1] : '', size: null, runs: [] };
-  }
-  return readHeader(p);
+  if (!(m[0] === 0xd6 && m[1] === 0xc3 && m[2] === 0xc4))
+    throw new Error('File ini bukan .xdelta. Patcher ini hanya menerima file patch .xdelta.');
+  const v = /v([0-9][0-9a-z._-]*?)(?:_|\.xdelta|$)/i.exec(p.name || '');
+  return { xdelta: true, version: v ? v[1] : '' };
 }
 
 $('mode').textContent = !CAN ? 'Browser ini terlalu lama. Pakai Chrome, Edge, Firefox atau Safari versi terbaru.'
-  : FSA ? 'Mode: tulis langsung ke file (cepat, tanpa verifikasi kecuali kamu mencentang Periksa ISO).'
-  : (WORKER_OK ? 'Mode: unduhan langsung streaming di thread terpisah (cepat, hemat memori — cocok untuk HP/Android).'
-              : 'Mode: unduhan langsung streaming (hemat memori — cocok untuk HP/Android).');
-$('full-wrap').hidden = !CAN;
+  : FSA ? 'Mode: tulis langsung ke file (desktop).'
+  : 'Mode: unduhan langsung streaming (hemat memori — cocok untuk HP/Android).';
+$('full-wrap').hidden = true;   // xdelta3 memverifikasi sumber sendiri; tak perlu opsi verifikasi terpisah
 
 $('iso').addEventListener('change', e => {
   iso = e.target.files[0] || null;
@@ -174,8 +161,7 @@ $('patch').addEventListener('change', async e => {
   if (patch) {
     try {
       hdr = await readPatchInfo(patch);
-      if (hdr.xdelta) status('patch-st', `✓ Patch xdelta${hdr.version ? ' v' + hdr.version : ''} (cepat). Pakai ISO Jepang asli.`, 'ok');
-      else status('patch-st', `✓ Patch v${hdr.version} (${hdr.runs.length} bagian, ${mb(hdr.dataLen)} data baru).`, 'ok');
+      status('patch-st', `✓ Patch xdelta${hdr.version ? ' v' + hdr.version : ''}. Pakai ISO Jepang asli.`, 'ok');
     } catch (err) { status('patch-st', '✗ ' + err.message, 'bad'); }
   }
   refresh();
@@ -194,8 +180,6 @@ function prog(f) {
 function message(html, cls) { $('msg').innerHTML = html; $('msg').className = cls; }
 
 const outName = () => `Sengoku Basara 2 Heroes (Indonesia${hdr && hdr.version ? ' v' + hdr.version : ''}).iso`;
-const BAD_ISO = 'ISO asli tidak cocok dengan dump yang dibutuhkan (isi berbeda). Pakai dump bersih ' +
-                'Sengoku Basara 2 - Heroes (Japan) yang sesuai Redump.';
 
 // Open a streaming download via a service worker: bytes flow to the file as they are produced
 // (constant memory, no multi-GB Blob), so Android / non-FSA browsers don't stall. Returns the
@@ -228,26 +212,6 @@ async function swChannel(name, size) {
   ifr.src = new URL('dl/' + id, location.href).href;
   document.body.appendChild(ifr);
   return { writable: ts.writable, done: () => setTimeout(() => ifr.remove(), 3000) };
-}
-
-// Run the patch apply in a Web Worker (off the main thread, so the UI stays smooth and the byte work runs at
-// full speed), streaming the result into `writable`. Resolves with the output CRC (-1 when not computed).
-// Rejects with { unsupported: true } if the worker / stream transfer can't be set up, so the caller can
-// fall back to applying on the main thread.
-function applyInWorker(writable, verify, onProgress) {
-  return new Promise((resolve, reject) => {
-    let w;
-    try { w = new Worker('worker.js'); } catch (_) { reject({ unsupported: true }); return; }
-    w.onerror = () => { w.terminate(); reject({ unsupported: true }); };
-    w.onmessage = e => {
-      const d = e.data || {};
-      if (d.type === 'progress') onProgress(d.f);
-      else if (d.type === 'done') { w.terminate(); resolve(d.crc); }
-      else if (d.type === 'error') { w.terminate(); reject(new Error(d.message || 'Gagal memasang patch.')); }
-    };
-    try { w.postMessage({ iso, patch, hdr, verify, writable }, [writable]); }
-    catch (_) { w.terminate(); reject({ unsupported: true }); }
-  });
 }
 
 // === xdelta engine (real xdelta3 compiled to WASM, kotcrab/xdelta-wasm, Apache-2.0) ===
@@ -320,62 +284,7 @@ $('go').addEventListener('click', async () => {
   const guard = e => { e.preventDefault(); e.returnValue = ''; };
   window.addEventListener('beforeunload', guard);
   try {
-    const verify = $('full').checked;
-    if (hdr.xdelta) { await runXdeltaFlow(handle); return; }   // real xdelta3 engine (fast)
-    if (verify) {
-      stage('Memeriksa ISO asli…');
-      const bad = await checkOriginal(iso, hdr, prog);
-      if (bad) throw new Error(bad === 'size' ? 'Ukuran ISO berbeda.' : BAD_ISO);
-    }
-    if (handle) {
-      const w = await handle.createWritable();
-      stage('Menulis ISO baru…');
-      let crc;
-      try { crc = await writePatched(iso, patch, hdr, w, prog, { skipCrc: !verify }); }
-      catch (err) { await w.abort().catch(() => {}); throw err; }
-      if (verify && crc !== hdr.crcOut) {
-        await w.abort().catch(() => {});
-        throw new Error('ISO hasil tidak sesuai harapan (verifikasi gagal). ' + BAD_ISO);
-      }
-      stage('Menyimpan…');
-      await w.close();
-      prog(1); $('stage-t').textContent = 'Selesai.';
-      message(`<b>Berhasil!</b> ISO terjemahan tersimpan sebagai <code>${handle.name}</code>${verify ? ' dan sudah diverifikasi' : ''}.
-        Buka file itu di PCSX2, ARMSX2, AetherSX2/NetherSX2 atau OPL seperti biasa.`, 'ok');
-    } else {
-      let ch = null;
-      try { ch = await swChannel(outName(), hdr.size); }          // stream straight to a download (constant memory)
-      catch (e) { if (!(e && e.unsupported)) throw e; }           // browser without SW streaming -> Blob fallback below
-      if (ch) {
-        stage('Mengunduh ISO baru…');
-        let crc;
-        if (WORKER_OK) {                                          // apply off the main thread (smooth, full speed)
-          try { crc = await applyInWorker(ch.writable, verify, prog); }
-          catch (err) { ch.done(); throw err; }
-        } else {                                                  // rare: streams transfer to SW but no Worker
-          const writer = ch.writable.getWriter();
-          try { crc = await writePatched(iso, patch, hdr, { write: u8 => writer.write(u8) }, prog, { skipCrc: !verify }); await writer.close(); }
-          catch (err) { try { await writer.abort(err); } catch (_) {} ch.done(); throw err; }
-        }
-        ch.done();
-        prog(1); $('stage-t').textContent = 'Selesai.';
-        const mism = verify && crc !== hdr.crcOut;
-        const warn = mism ? ' <b>Catatan:</b> hasil tidak sesuai harapan — pastikan ISO asalmu dump bersih.' : '';
-        message(`<b>Berhasil!</b> ISO terjemahan sedang diunduh sebagai <code>${outName()}</code>. Biarkan halaman ini
-          terbuka sampai unduhan selesai, lalu buka file itu di PCSX2, ARMSX2, AetherSX2/NetherSX2 atau OPL.${warn}`,
-          mism ? 'info' : 'ok');
-      } else {
-        stage('Menyiapkan ISO baru…');
-        const blob = await patchedBlob(iso, patch, hdr, prog);
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);     // kept alive: the download reads from it until it finishes
-        a.download = outName();
-        document.body.appendChild(a); a.click(); a.remove();
-        prog(1); $('stage-t').textContent = 'Unduhan dimulai.';
-        message(`<b>Unduhan ISO terjemahan dimulai</b> (${gb(blob.size)}). Biarkan halaman ini terbuka sampai unduhan
-          selesai, lalu buka file <code>${a.download}</code> di emulatormu.`, 'info');
-      }
-    }
+    await runXdeltaFlow(handle);               // real xdelta3 engine (only .xdelta is accepted)
   } catch (err) {
     $('stage-t').textContent = 'Gagal.';
     message('<b>Gagal:</b> ' + (err && err.message ? err.message : String(err)).replace(/</g, '&lt;'), 'bad');
