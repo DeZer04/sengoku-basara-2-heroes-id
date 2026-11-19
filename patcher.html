@@ -82,7 +82,7 @@ code { font-size: .88em; }
 
   <section class="step">
     <h2><span class="num">2</span>File patch</h2>
-    <label class="pick">Pilih file .patch<input type="file" id="patch"></label>
+    <label class="pick">Pilih file .xdelta / .patch<input type="file" id="patch"></label>
     <div class="file" id="patch-name"></div>
     <div class="st" id="patch-st"></div>
   </section>
@@ -109,10 +109,12 @@ code { font-size: .88em; }
         secara streaming (hemat memori, tidak macet di 1%); tunggu sampai unduhan selesai.</li>
       <li>Android: biarkan layar menyala dan jangan pindah aplikasi sampai selesai. Hasilnya bisa langsung dibuka
         di ARMSX2, AetherSX2 atau NetherSX2.</li>
+      <li>Disarankan pakai file <b>.xdelta</b> (lebih cepat — memakai mesin xdelta3 asli). File <b>.patch</b> lama tetap didukung.</li>
       <li>Semua proses terjadi di perangkatmu. Tidak ada file yang diunggah ke mana pun.</li>
     </ul>
   </details>
-  <footer>Patched by DeZer04 &middot; <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id">github.com/DeZer04/sengoku-basara-2-heroes-id</a><br>Terjemahan buatan penggemar, gratis, bukan untuk dijual. Game, karakter, gambar dan musik milik CAPCOM.</footer>
+  <footer>Patched by DeZer04 &middot; <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id">github.com/DeZer04/sengoku-basara-2-heroes-id</a><br>Terjemahan buatan penggemar, gratis, bukan untuk dijual. Game, karakter, gambar dan musik milik CAPCOM.
+<br>Mesin patch .xdelta: <a href="https://github.com/kotcrab/xdelta-wasm">xdelta3 via kotcrab/xdelta-wasm</a> (Apache-2.0).</footer>
 </main>
 
 <script src="patch-core.js"></script>
@@ -135,10 +137,21 @@ function status(id, text, cls) { $(id).textContent = text; $(id).className = 'st
 
 function refresh() {
   if (iso && hdr) {
-    if (iso.size === hdr.size) status('iso-st', '✓ Ukuran cocok dengan ISO yang dibutuhkan.', 'ok');
+    if (hdr.xdelta) status('iso-st', '✓ ISO dipilih. Kecocokan diperiksa otomatis saat memproses.', 'ok');
+    else if (iso.size === hdr.size) status('iso-st', '✓ Ukuran cocok dengan ISO yang dibutuhkan.', 'ok');
     else status('iso-st', '✗ Ukuran berbeda: ini bukan ISO Sengoku Basara 2 - Heroes (Japan) yang dibutuhkan.', 'bad');
   }
-  $('go').disabled = busy || !CAN || !(iso && hdr && iso.size === hdr.size);
+  $('go').disabled = busy || !CAN || !(iso && hdr && (hdr.xdelta || iso.size === hdr.size));
+}
+
+// peek the patch file: VCDIFF (xdelta3) magic D6 C3 C4 -> xdelta engine; otherwise our BSR2IDP2 header
+async function readPatchInfo(p) {
+  const m = new Uint8Array(await p.slice(0, 4).arrayBuffer());
+  if (m[0] === 0xd6 && m[1] === 0xc3 && m[2] === 0xc4) {
+    const v = /v([0-9][0-9a-z._-]*?)(?:_|\.xdelta|$)/i.exec(p.name || '');
+    return { xdelta: true, version: v ? v[1] : '', size: null, runs: [] };
+  }
+  return readHeader(p);
 }
 
 $('mode').textContent = !CAN ? 'Browser ini terlalu lama. Pakai Chrome, Edge, Firefox atau Safari versi terbaru.'
@@ -160,8 +173,9 @@ $('patch').addEventListener('change', async e => {
   status('patch-st', '');
   if (patch) {
     try {
-      hdr = await readHeader(patch);
-      status('patch-st', `✓ Patch v${hdr.version} (${hdr.runs.length} bagian, ${mb(hdr.dataLen)} data baru).`, 'ok');
+      hdr = await readPatchInfo(patch);
+      if (hdr.xdelta) status('patch-st', `✓ Patch xdelta${hdr.version ? ' v' + hdr.version : ''} (cepat). Pakai ISO Jepang asli.`, 'ok');
+      else status('patch-st', `✓ Patch v${hdr.version} (${hdr.runs.length} bagian, ${mb(hdr.dataLen)} data baru).`, 'ok');
     } catch (err) { status('patch-st', '✗ ' + err.message, 'bad'); }
   }
   refresh();
@@ -179,7 +193,7 @@ function prog(f) {
 }
 function message(html, cls) { $('msg').innerHTML = html; $('msg').className = cls; }
 
-const outName = () => `Sengoku Basara 2 Heroes (Indonesia v${hdr.version}).iso`;
+const outName = () => `Sengoku Basara 2 Heroes (Indonesia${hdr && hdr.version ? ' v' + hdr.version : ''}).iso`;
 const BAD_ISO = 'ISO asli tidak cocok dengan dump yang dibutuhkan (isi berbeda). Pakai dump bersih ' +
                 'Sengoku Basara 2 - Heroes (Japan) yang sesuai Redump.';
 
@@ -236,6 +250,58 @@ function applyInWorker(writable, verify, onProgress) {
   });
 }
 
+// === xdelta engine (real xdelta3 compiled to WASM, kotcrab/xdelta-wasm, Apache-2.0) ===
+// Applies a standard .xdelta patch. The worker reads source + patch with FileReaderSync and posts output
+// chunks; we stream them into `sink`. Source matching is checksum-verified by xdelta3 itself.
+function applyXdelta(sink) {
+  return new Promise((resolve, reject) => {
+    let w;
+    try { w = new Worker('xdelta/xdelta3.worker.js', { type: 'module' }); }
+    catch (_) { reject(new Error('Browser ini tak mendukung module Web Worker (butuh Chrome/Edge/Firefox/Safari terbaru).')); return; }
+    let written = 0, chain = Promise.resolve(), done = false;
+    const fail = msg => { if (done) return; done = true; w.terminate(); chain.finally(() => { try { sink.abort(new Error(msg)); } catch (_) {} }); reject(new Error(msg)); };
+    w.onerror = () => fail('Gagal menjalankan mesin xdelta.');
+    w.onmessage = e => {
+      const d = e.data; if (!d || done) return;
+      if (!d.final) { const b = d.bytes; written += b.length; prog(written / iso.size); chain = chain.then(() => sink.write(b)); }
+      else if (d.error) fail('Patch gagal — ISO sumber kemungkinan tidak cocok. (' + (d.errorMessage || 'checksum') + ')');
+      else { done = true; w.terminate(); chain.then(() => sink.close()).then(resolve, reject); }
+    };
+    w.postMessage({ command: 'start', sourceFile: iso, patchFile: patch, disableChecksum: false });  // keep source checksum on
+  });
+}
+
+// pick an output sink (same for both engines): direct-to-file (desktop FSA), streaming download (Android), or Blob
+async function openSink(handle) {
+  if (handle) {
+    const w = await handle.createWritable();
+    return { kind: 'file', name: handle.name, write: u8 => w.write(u8), close: () => w.close(), abort: () => w.abort().catch(() => {}) };
+  }
+  let ch = null;
+  try { ch = await swChannel(outName(), iso.size); } catch (e) { if (!(e && e.unsupported)) throw e; }
+  if (ch) {
+    const writer = ch.writable.getWriter();
+    return { kind: 'stream', write: u8 => writer.write(u8), close: async () => { await writer.close(); ch.done(); }, abort: async e => { try { await writer.abort(e); } catch (_) {} ch.done(); } };
+  }
+  const parts = [];
+  return { kind: 'blob', write: u8 => { parts.push(u8); }, close: () => { blobOut = new Blob(parts, { type: 'application/octet-stream' }); }, abort: () => {} };
+}
+let blobOut = null;
+
+async function runXdeltaFlow(handle) {
+  blobOut = null;
+  const sink = await openSink(handle);
+  stage(sink.kind === 'file' ? 'Menulis ISO baru…' : 'Mengunduh ISO baru…');
+  await applyXdelta(sink);
+  if (sink.kind === 'blob' && blobOut) {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blobOut); a.download = outName();
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  prog(1); $('stage-t').textContent = sink.kind === 'blob' ? 'Unduhan dimulai.' : 'Selesai.';
+  message(`<b>Berhasil!</b> ISO terjemahan ${sink.kind === 'file' ? 'tersimpan' : 'diunduh'} sebagai
+    <code>${sink.kind === 'file' ? sink.name : outName()}</code>. Buka di PCSX2, ARMSX2, AetherSX2/NetherSX2 atau OPL.`, 'ok');
+}
+
 $('go').addEventListener('click', async () => {
   let handle = null;
   if (FSA) {                                    // the save dialog needs the click itself, so it comes first
@@ -255,6 +321,7 @@ $('go').addEventListener('click', async () => {
   window.addEventListener('beforeunload', guard);
   try {
     const verify = $('full').checked;
+    if (hdr.xdelta) { await runXdeltaFlow(handle); return; }   // real xdelta3 engine (fast)
     if (verify) {
       stage('Memeriksa ISO asli…');
       const bad = await checkOriginal(iso, hdr, prog);
