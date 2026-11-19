@@ -104,8 +104,9 @@ code { font-size: .88em; }
       <li>ISO yang dibutuhkan: <b>Sengoku Basara 2 - Heroes (Japan)</b> (SLPM-66848), 4.677.795.840 byte,
         satu file .iso. Kalau ISO-mu .chd/.cso/.7z, ubah atau ekstrak dulu ke .iso.</li>
       <li>Butuh ruang kosong ±4,7 GB untuk ISO baru. ISO asli tidak diubah.</li>
-      <li>Di Chrome/Edge (PC, Mac, Android) kamu memilih lokasi simpan dulu, lalu ISO baru ditulis langsung (cepat;
-        centang "Periksa ISO" kalau mau diverifikasi). Di Firefox/Safari hasilnya diunduh seperti file biasa; tunggu sampai unduhan selesai.</li>
+      <li>Di Chrome/Edge desktop kamu memilih lokasi simpan dulu, lalu ISO baru ditulis langsung (cepat;
+        centang "Periksa ISO" kalau mau diverifikasi). Di HP/Android dan browser lain, ISO baru langsung diunduh
+        secara streaming (hemat memori, tidak macet di 1%); tunggu sampai unduhan selesai.</li>
       <li>Android: biarkan layar menyala dan jangan pindah aplikasi sampai selesai. Hasilnya bisa langsung dibuka
         di ARMSX2, AetherSX2 atau NetherSX2.</li>
       <li>Semua proses terjadi di perangkatmu. Tidak ada file yang diunggah ke mana pun.</li>
@@ -278,7 +279,7 @@ function refresh() {
 
 $('mode').textContent = !CAN ? 'Browser ini terlalu lama. Pakai Chrome, Edge, Firefox atau Safari versi terbaru.'
   : FSA ? 'Mode: tulis langsung ke file (cepat, tanpa verifikasi kecuali kamu mencentang Periksa ISO).'
-  : 'Mode: unduhan (browser ini tidak bisa menulis file langsung).';
+  : 'Mode: unduhan langsung streaming (hemat memori — cocok untuk HP/Android).';
 $('full-wrap').hidden = !CAN;
 
 $('iso').addEventListener('change', e => {
@@ -316,6 +317,37 @@ function message(html, cls) { $('msg').innerHTML = html; $('msg').className = cl
 const outName = () => `Sengoku Basara 2 Heroes (Indonesia v${hdr.version}).iso`;
 const BAD_ISO = 'ISO asli tidak cocok dengan dump yang dibutuhkan (isi berbeda). Pakai dump bersih ' +
                 'Sengoku Basara 2 - Heroes (Japan) yang sesuai Redump.';
+
+// Stream the patched ISO straight to a browser download via a service worker: bytes flow to the file as
+// they are produced (constant memory, no multi-GB Blob), so Android / non-FSA browsers don't stall.
+// Throws { unsupported: true } when the browser can't do it, so the caller falls back to the Blob path.
+async function streamSetup(name, size) {
+  if (!('serviceWorker' in navigator) || !window.isSecureContext || typeof TransformStream !== 'function')
+    throw { unsupported: true };
+  let reg;
+  try { reg = await navigator.serviceWorker.register('sw.js'); await navigator.serviceWorker.ready; }
+  catch (_) { throw { unsupported: true }; }
+  const sw = reg.active || navigator.serviceWorker.controller;
+  if (!sw) throw { unsupported: true };
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+  const ts = new TransformStream();
+  try {
+    await new Promise((resolve, reject) => {                     // wait until the worker has the stream mapped
+      const onmsg = e => {
+        if (e.data && e.data.type === 'ready' && e.data.id === id) {
+          navigator.serviceWorker.removeEventListener('message', onmsg); resolve();
+        }
+      };
+      navigator.serviceWorker.addEventListener('message', onmsg);
+      setTimeout(() => { navigator.serviceWorker.removeEventListener('message', onmsg); reject({ unsupported: true }); }, 5000);
+      sw.postMessage({ type: 'stream', id, name, size, readable: ts.readable }, [ts.readable]);  // throws without transferable streams
+    });
+  } catch (e) { throw (e && e.unsupported) ? e : { unsupported: true }; }
+  const ifr = document.createElement('iframe'); ifr.hidden = true;  // loading the dl URL triggers the download
+  ifr.src = new URL('dl/' + id, location.href).href;
+  document.body.appendChild(ifr);
+  return { writer: ts.writable.getWriter(), done: () => setTimeout(() => ifr.remove(), 3000) };
+}
 
 $('go').addEventListener('click', async () => {
   let handle = null;
@@ -357,15 +389,32 @@ $('go').addEventListener('click', async () => {
       message(`<b>Berhasil!</b> ISO terjemahan tersimpan sebagai <code>${handle.name}</code>${verify ? ' dan sudah diverifikasi' : ''}.
         Buka file itu di PCSX2, ARMSX2, AetherSX2/NetherSX2 atau OPL seperti biasa.`, 'ok');
     } else {
-      stage('Menyiapkan ISO baru…');
-      const blob = await patchedBlob(iso, patch, hdr, prog);
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);       // kept alive: the download reads from it until it finishes
-      a.download = outName();
-      document.body.appendChild(a); a.click(); a.remove();
-      prog(1); $('stage-t').textContent = 'Unduhan dimulai.';
-      message(`<b>Unduhan ISO terjemahan dimulai</b> (${gb(blob.size)}). Biarkan halaman ini terbuka sampai unduhan
-        selesai, lalu buka file <code>${a.download}</code> di emulatormu.`, 'info');
+      let setup = null;
+      try { setup = await streamSetup(outName(), hdr.size); }     // stream straight to a download (constant memory)
+      catch (e) { if (!(e && e.unsupported)) throw e; }           // browser without SW streaming -> Blob fallback below
+      if (setup) {
+        stage('Mengunduh ISO baru…');
+        let crc;
+        try { crc = await writePatched(iso, patch, hdr, { write: u8 => setup.writer.write(u8) }, prog); await setup.writer.close(); }
+        catch (err) { try { await setup.writer.abort(err); } catch (_) {} setup.done(); throw err; }
+        setup.done();
+        prog(1); $('stage-t').textContent = 'Selesai.';
+        const warn = crc !== hdr.crcOut
+          ? ' <b>Catatan:</b> hasil tidak sama persis dengan yang diharapkan — pastikan ISO asalmu dump bersih.' : '';
+        message(`<b>Berhasil!</b> ISO terjemahan sedang diunduh sebagai <code>${outName()}</code>. Biarkan halaman ini
+          terbuka sampai unduhan selesai, lalu buka file itu di PCSX2, ARMSX2, AetherSX2/NetherSX2 atau OPL.${warn}`,
+          crc !== hdr.crcOut ? 'info' : 'ok');
+      } else {
+        stage('Menyiapkan ISO baru…');
+        const blob = await patchedBlob(iso, patch, hdr, prog);
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);     // kept alive: the download reads from it until it finishes
+        a.download = outName();
+        document.body.appendChild(a); a.click(); a.remove();
+        prog(1); $('stage-t').textContent = 'Unduhan dimulai.';
+        message(`<b>Unduhan ISO terjemahan dimulai</b> (${gb(blob.size)}). Biarkan halaman ini terbuka sampai unduhan
+          selesai, lalu buka file <code>${a.download}</code> di emulatormu.`, 'info');
+      }
     }
   } catch (err) {
     $('stage-t').textContent = 'Gagal.';
