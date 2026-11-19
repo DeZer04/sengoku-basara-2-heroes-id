@@ -115,154 +115,18 @@ code { font-size: .88em; }
   <footer>Patched by DeZer04 &middot; <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id">github.com/DeZer04/sengoku-basara-2-heroes-id</a><br>Terjemahan buatan penggemar, gratis, bukan untuk dijual. Game, karakter, gambar dan musik milik CAPCOM.</footer>
 </main>
 
+<script src="patch-core.js"></script>
 <script>
-// ==CORE== patch format BSR2IDP2 (see make_patch.py); this block is also run by patcher_test.mjs under Node
-const MAGIC = 'BSR2IDP2', HDR = 96, RUN = 12, BLK = 2048, CHUNK = 8 << 20;
-
-const CRC_T = (() => {                          // slicing-by-8 tables for CRC-32 (same values as zlib.crc32)
-  const t = new Uint32Array(2048);
-  for (let i = 0; i < 256; i++) {
-    let c = i;
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
-    t[i] = c;
-  }
-  for (let i = 0; i < 256; i++)
-    for (let s = 1; s < 8; s++) t[s * 256 + i] = (t[(s - 1) * 256 + i] >>> 8) ^ t[t[(s - 1) * 256 + i] & 255];
-  return t;
-})();
-
-function crc32(u8, crc = 0) {
-  const T = CRC_T, n = u8.length;
-  let c = ~crc, i = 0;
-  for (; i + 8 <= n; i += 8) {
-    c ^= u8[i] | u8[i + 1] << 8 | u8[i + 2] << 16 | u8[i + 3] << 24;
-    c = T[1792 + (c & 255)] ^ T[1536 + (c >>> 8 & 255)] ^ T[1280 + (c >>> 16 & 255)] ^ T[1024 + (c >>> 24)] ^
-        T[768 + u8[i + 4]] ^ T[512 + u8[i + 5]] ^ T[256 + u8[i + 6]] ^ T[u8[i + 7]];
-  }
-  for (; i < n; i++) c = T[(c ^ u8[i]) & 255] ^ (c >>> 8);
-  return ~c >>> 0;
-}
-
-async function readHeader(patch) {
-  const bad = () => new Error('Ini bukan file patch Basara 2 ID (atau filenya rusak).');
-  if (patch.size < HDR) throw bad();
-  const h = new DataView(await patch.slice(0, HDR).arrayBuffer());
-  const str = (o, n) => new TextDecoder().decode(new Uint8Array(h.buffer, o, n)).replace(/\0+$/, '');
-  const hex = o => Array.from(new Uint8Array(h.buffer, o, 20), b => b.toString(16).padStart(2, '0')).join('');
-  if (str(0, 8) !== MAGIC) throw bad();
-  const nruns = h.getUint32(32, true), dataOffset = HDR + RUN * nruns;
-  if (patch.size < dataOffset) throw bad();
-  const r = new DataView(await patch.slice(HDR, dataOffset).arrayBuffer());
-  const runs = [];
-  for (let i = 0; i < nruns; i++)
-    runs.push({ start: r.getUint32(i * RUN, true) * BLK, len: r.getUint32(i * RUN + 4, true) * BLK,
-                crc: r.getUint32(i * RUN + 8, true) });
-  return { version: str(8, 8), size: Number(h.getBigUint64(16, true)), dataLen: Number(h.getBigUint64(24, true)),
-           crcOrig: h.getUint32(36, true), crcOut: h.getUint32(40, true), sha1Orig: hex(44), sha1Out: hex(64),
-           runs, dataOffset };
-}
-
-const BROKEN = 'File patch rusak atau terpotong (unduhan tidak lengkap?). Unduh ulang file patch.';
-
-class Inflater {                                // reads the gzip data section as a byte stream
-  constructor(blob) {
-    this.r = blob.stream().pipeThrough(new DecompressionStream('gzip')).getReader();
-    this.buf = new Uint8Array(0); this.pos = 0;
-  }
-  async next() {                                // inflate errors (cut-off download, bad CRC) -> one clear message
-    try { return await this.r.read(); } catch (_) { throw new Error(BROKEN); }
-  }
-  async read(n) {                               // up to n bytes (at least 1)
-    if (this.pos >= this.buf.length) {
-      const { value, done } = await this.next();
-      if (done) throw new Error(BROKEN);
-      this.buf = value; this.pos = 0;
-    }
-    const k = Math.min(n, this.buf.length - this.pos);
-    this.pos += k;
-    return this.buf.subarray(this.pos - k, this.pos);
-  }
-  async readFull(n) {
-    const out = new Uint8Array(n);
-    for (let o = 0; o < n;) { const c = await this.read(n - o); out.set(c, o); o += c.length; }
-    return out;
-  }
-  async end() {                                 // the stream must end exactly here (gzip CRC is checked on the way)
-    if (this.pos < this.buf.length) throw new Error(BROKEN);
-    for (;;) {
-      const { value, done } = await this.next();
-      if (done) return;
-      if (value.length) throw new Error(BROKEN);
-    }
-  }
-}
-
-function* plan(h) {                             // the patched ISO as copied ranges of the original + patch runs
-  let pos = 0;
-  for (const run of h.runs) {
-    if (run.start > pos) yield { from: pos, to: run.start };
-    yield { run };
-    pos = run.start + run.len;
-  }
-  if (pos < h.size) yield { from: pos, to: h.size };
-}
-
-async function readRange(blob, a, b, each) {
-  for (let p = a; p < b; p += CHUNK) await each(new Uint8Array(await blob.slice(p, Math.min(p + CHUNK, b)).arrayBuffer()));
-}
-
-// quick check: right size, and the bytes the patch replaces are those of the expected dump -> null, 'size', 'content'
-async function checkOriginal(iso, h, progress = () => {}) {
-  if (iso.size !== h.size) return 'size';
-  const total = h.runs.reduce((a, r) => a + r.len, 0);
-  let done = 0;
-  for (const run of h.runs) {
-    let c = 0;
-    await readRange(iso, run.start, run.start + run.len, u8 => { c = crc32(u8, c); done += u8.length; progress(done / total); });
-    if (c !== run.crc) return 'content';
-  }
-  return null;
-}
-
-async function crcFile(blob, progress = () => {}) {
-  let c = 0, done = 0;
-  await readRange(blob, 0, blob.size, u8 => { c = crc32(u8, c); done += u8.length; progress(done / blob.size); });
-  return c;
-}
-
-// stream the patched ISO into sink.write(u8) (in order); returns its CRC-32
-async function writePatched(iso, patch, h, sink, progress = () => {}) {
-  const inf = new Inflater(patch.slice(h.dataOffset));
-  let crc = 0, done = 0;
-  const put = async u8 => { crc = crc32(u8, crc); await sink.write(u8); done += u8.length; progress(done / h.size); };
-  for (const s of plan(h)) {
-    if (s.run) for (let left = s.run.len; left > 0;) { const u8 = await inf.readFull(Math.min(left, CHUNK)); left -= u8.length; await put(u8); }
-    else await readRange(iso, s.from, s.to, put);
-  }
-  await inf.end();
-  return crc;
-}
-
-// the patched ISO as a Blob: unchanged ranges stay references into the original file (nothing is copied in memory)
-async function patchedBlob(iso, patch, h, progress = () => {}) {
-  const inf = new Inflater(patch.slice(h.dataOffset));
-  const parts = [];
-  let done = 0;
-  for (const s of plan(h)) {
-    if (s.run) for (let left = s.run.len; left > 0;) {
-      const u8 = await inf.readFull(Math.min(left, CHUNK));
-      parts.push(u8); left -= u8.length; done += u8.length; progress(done / h.dataLen);
-    }
-    else parts.push(iso.slice(s.from, s.to));
-  }
-  await inf.end();
-  return new Blob(parts, { type: 'application/octet-stream' });
-}
-// ==END CORE==
 
 const $ = id => document.getElementById(id);
 const FSA = typeof window.showSaveFilePicker === 'function' && window.self === window.top;
 const CAN = typeof DecompressionStream === 'function' && typeof Blob.prototype.stream === 'function';
+const CAN_TRANSFER_STREAM = (() => {            // can we hand a stream to the service worker / a Web Worker?
+  try { const mc = new MessageChannel(), t = new TransformStream();
+        mc.port1.postMessage(t.readable, [t.readable]); mc.port1.close(); mc.port2.close(); return true; }
+  catch (_) { return false; }
+})();
+const WORKER_OK = typeof Worker === 'function' && CAN_TRANSFER_STREAM;   // run the apply off the main thread
 let iso = null, patch = null, hdr = null, busy = false;
 
 const gb = n => (n / 1e9).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' GB';
@@ -279,7 +143,8 @@ function refresh() {
 
 $('mode').textContent = !CAN ? 'Browser ini terlalu lama. Pakai Chrome, Edge, Firefox atau Safari versi terbaru.'
   : FSA ? 'Mode: tulis langsung ke file (cepat, tanpa verifikasi kecuali kamu mencentang Periksa ISO).'
-  : 'Mode: unduhan langsung streaming (hemat memori — cocok untuk HP/Android).';
+  : (WORKER_OK ? 'Mode: unduhan langsung streaming di thread terpisah (cepat, hemat memori — cocok untuk HP/Android).'
+              : 'Mode: unduhan langsung streaming (hemat memori — cocok untuk HP/Android).');
 $('full-wrap').hidden = !CAN;
 
 $('iso').addEventListener('change', e => {
@@ -318,10 +183,11 @@ const outName = () => `Sengoku Basara 2 Heroes (Indonesia v${hdr.version}).iso`;
 const BAD_ISO = 'ISO asli tidak cocok dengan dump yang dibutuhkan (isi berbeda). Pakai dump bersih ' +
                 'Sengoku Basara 2 - Heroes (Japan) yang sesuai Redump.';
 
-// Stream the patched ISO straight to a browser download via a service worker: bytes flow to the file as
-// they are produced (constant memory, no multi-GB Blob), so Android / non-FSA browsers don't stall.
+// Open a streaming download via a service worker: bytes flow to the file as they are produced
+// (constant memory, no multi-GB Blob), so Android / non-FSA browsers don't stall. Returns the
+// TransformStream's writable (fed either by a worker or the main thread) plus a done() cleanup.
 // Throws { unsupported: true } when the browser can't do it, so the caller falls back to the Blob path.
-async function streamSetup(name, size) {
+async function swChannel(name, size) {
   if (!('serviceWorker' in navigator) || !window.isSecureContext || typeof TransformStream !== 'function')
     throw { unsupported: true };
   let reg;
@@ -346,7 +212,27 @@ async function streamSetup(name, size) {
   const ifr = document.createElement('iframe'); ifr.hidden = true;  // loading the dl URL triggers the download
   ifr.src = new URL('dl/' + id, location.href).href;
   document.body.appendChild(ifr);
-  return { writer: ts.writable.getWriter(), done: () => setTimeout(() => ifr.remove(), 3000) };
+  return { writable: ts.writable, done: () => setTimeout(() => ifr.remove(), 3000) };
+}
+
+// Run the patch apply in a Web Worker (off the main thread, so the UI stays smooth and the byte work runs at
+// full speed), streaming the result into `writable`. Resolves with the output CRC (-1 when not computed).
+// Rejects with { unsupported: true } if the worker / stream transfer can't be set up, so the caller can
+// fall back to applying on the main thread.
+function applyInWorker(writable, verify, onProgress) {
+  return new Promise((resolve, reject) => {
+    let w;
+    try { w = new Worker('worker.js'); } catch (_) { reject({ unsupported: true }); return; }
+    w.onerror = () => { w.terminate(); reject({ unsupported: true }); };
+    w.onmessage = e => {
+      const d = e.data || {};
+      if (d.type === 'progress') onProgress(d.f);
+      else if (d.type === 'done') { w.terminate(); resolve(d.crc); }
+      else if (d.type === 'error') { w.terminate(); reject(new Error(d.message || 'Gagal memasang patch.')); }
+    };
+    try { w.postMessage({ iso, patch, hdr, verify, writable }, [writable]); }
+    catch (_) { w.terminate(); reject({ unsupported: true }); }
+  });
 }
 
 $('go').addEventListener('click', async () => {
@@ -377,7 +263,7 @@ $('go').addEventListener('click', async () => {
       const w = await handle.createWritable();
       stage('Menulis ISO baru…');
       let crc;
-      try { crc = await writePatched(iso, patch, hdr, w, prog); }
+      try { crc = await writePatched(iso, patch, hdr, w, prog, { skipCrc: !verify }); }
       catch (err) { await w.abort().catch(() => {}); throw err; }
       if (verify && crc !== hdr.crcOut) {
         await w.abort().catch(() => {});
@@ -389,21 +275,27 @@ $('go').addEventListener('click', async () => {
       message(`<b>Berhasil!</b> ISO terjemahan tersimpan sebagai <code>${handle.name}</code>${verify ? ' dan sudah diverifikasi' : ''}.
         Buka file itu di PCSX2, ARMSX2, AetherSX2/NetherSX2 atau OPL seperti biasa.`, 'ok');
     } else {
-      let setup = null;
-      try { setup = await streamSetup(outName(), hdr.size); }     // stream straight to a download (constant memory)
+      let ch = null;
+      try { ch = await swChannel(outName(), hdr.size); }          // stream straight to a download (constant memory)
       catch (e) { if (!(e && e.unsupported)) throw e; }           // browser without SW streaming -> Blob fallback below
-      if (setup) {
+      if (ch) {
         stage('Mengunduh ISO baru…');
         let crc;
-        try { crc = await writePatched(iso, patch, hdr, { write: u8 => setup.writer.write(u8) }, prog); await setup.writer.close(); }
-        catch (err) { try { await setup.writer.abort(err); } catch (_) {} setup.done(); throw err; }
-        setup.done();
+        if (WORKER_OK) {                                          // apply off the main thread (smooth, full speed)
+          try { crc = await applyInWorker(ch.writable, verify, prog); }
+          catch (err) { ch.done(); throw err; }
+        } else {                                                  // rare: streams transfer to SW but no Worker
+          const writer = ch.writable.getWriter();
+          try { crc = await writePatched(iso, patch, hdr, { write: u8 => writer.write(u8) }, prog, { skipCrc: !verify }); await writer.close(); }
+          catch (err) { try { await writer.abort(err); } catch (_) {} ch.done(); throw err; }
+        }
+        ch.done();
         prog(1); $('stage-t').textContent = 'Selesai.';
-        const warn = crc !== hdr.crcOut
-          ? ' <b>Catatan:</b> hasil tidak sama persis dengan yang diharapkan — pastikan ISO asalmu dump bersih.' : '';
+        const mism = verify && crc !== hdr.crcOut;
+        const warn = mism ? ' <b>Catatan:</b> hasil tidak sesuai harapan — pastikan ISO asalmu dump bersih.' : '';
         message(`<b>Berhasil!</b> ISO terjemahan sedang diunduh sebagai <code>${outName()}</code>. Biarkan halaman ini
           terbuka sampai unduhan selesai, lalu buka file itu di PCSX2, ARMSX2, AetherSX2/NetherSX2 atau OPL.${warn}`,
-          crc !== hdr.crcOut ? 'info' : 'ok');
+          mism ? 'info' : 'ok');
       } else {
         stage('Menyiapkan ISO baru…');
         const blob = await patchedBlob(iso, patch, hdr, prog);
