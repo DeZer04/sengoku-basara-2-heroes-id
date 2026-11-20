@@ -43,6 +43,16 @@ header p { margin: 4px 0 0; color: var(--muted); }
 .file { margin-top: 8px; font-size: .9rem; color: var(--muted); word-break: break-all; }
 .st { margin-top: 6px; font-size: .92rem; }
 .hint { margin: 10px 0 0; font-size: .88rem; color: var(--muted); }
+.keybox { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.keybox label { display: block; font-weight: 600; font-size: .92rem; margin-bottom: 6px; }
+.keybox input { width: 100%; font: 15px ui-monospace, Consolas, monospace; padding: 10px 12px; border: 1px solid var(--line);
+                border-radius: 8px; background: var(--bg); color: var(--fg); }
+.keybox input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+.keycopy { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .88rem; color: var(--muted); }
+.keycopy code { user-select: all; background: var(--bg); border: 1px solid var(--line); padding: 4px 8px; border-radius: 6px;
+                color: var(--fg); word-break: break-all; }
+.keycopy button { border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 6px; padding: 5px 10px;
+                  font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; }
 .hint a { color: inherit; }
 .st.ok { color: var(--ok); } .st.bad { color: var(--bad); }
 button#go { width: 100%; border: 0; border-radius: 10px; padding: 14px; font: inherit; font-weight: 700; font-size: 1.05rem;
@@ -75,10 +85,20 @@ code { font-size: .88em; }
   </header>
 
   <section class="step">
-    <h2><span class="num">1</span>Game Wii milikmu (RVZ)</h2>
-    <label class="pick">Pilih file .rvz<input type="file" id="rvz"></label>
+    <h2><span class="num">1</span>Game Wii milikmu (ISO atau RVZ)</h2>
+    <label class="pick">Pilih file .iso / .rvz<input type="file" id="rvz"></label>
     <div class="file" id="rvz-name"></div>
     <div class="st" id="rvz-st"></div>
+    <div class="keybox" id="keybox" hidden>
+      <label for="key">Common key Wii <span class="tag">khusus ISO</span></label>
+      <input id="key" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+             placeholder="Tempel common key Wii di sini (32 karakter hex)">
+      <div class="st" id="key-st"></div>
+      <div class="keycopy"><span>Common key Wii:</span> <code id="ck">ebe42a225e8593e448d9c5457381aaf7</code>
+        <button type="button" id="ckuse">Salin &amp; pakai</button></div>
+      <p class="hint">Tekan <b>Salin &amp; pakai</b>, atau salin kunci di atas lalu tempel di kolom. Kunci hanya disimpan di
+        browser ini dan tidak dikirim ke mana pun. File RVZ tidak butuh kunci.</p>
+    </div>
   </section>
 
   <section class="step">
@@ -93,7 +113,7 @@ code { font-size: .88em; }
     <h2><span class="num">3</span>Buat ISO terjemahan</h2>
     <button id="go" disabled>Patch sekarang</button>
     <div class="bar"><div id="bar"></div></div>
-    <div id="stage"><span id="stage-t">Pilih file RVZ dan file patch.</span><span id="stage-p"></span></div>
+    <div id="stage"><span id="stage-t">Pilih file game dan file patch.</span><span id="stage-p"></span></div>
     <div id="msg"></div>
     <div class="mode" id="mode"></div>
   </section>
@@ -102,9 +122,12 @@ code { font-size: .88em; }
     <summary>Bantuan</summary>
     <ul>
       <li>Game yang dibutuhkan: disk <b>Heroes</b> dari <b>Sengoku Basara 2 Heroes Double Pack</b> versi Jepang
-        (ID game <code>RBSJ08</code>), dump dari disk milikmu sendiri, dalam format <b>RVZ</b>.</li>
-      <li>Punya ISO atau WBFS? Ubah dulu ke RVZ di Dolphin. Di PC: klik kanan game &rarr; <i>Convert File…</i>.
-        Di Android: tekan lama game di daftar &rarr; <i>Convert File</i>. Pilih Format <b>RVZ</b>,
+        (ID game <code>RBSJ08</code>), dump dari disk milikmu sendiri, dalam format <b>ISO</b> atau <b>RVZ</b>.</li>
+      <li><b>ISO</b>: isi disk Wii terenkripsi, jadi patcher butuh <b>common key Wii</b>. Setelah memilih ISO, tekan
+        <b>Salin &amp; pakai</b> di kolom kunci yang muncul (cukup sekali, disimpan di browser ini).
+        <b>RVZ</b> tidak butuh kunci.</li>
+      <li>Punya WBFS? Ubah dulu ke ISO atau RVZ di Dolphin. Di PC: klik kanan game &rarr;
+        <i>Convert File…</i>. Di Android: tekan lama game di daftar &rarr; <i>Convert File</i>. Pilih Format <b>RVZ</b>,
         Compression <b>Zstandard</b> (bawaan), lalu Convert. File aslimu tidak diubah.</li>
       <li>Butuh ruang kosong ±4,5 GB untuk ISO baru.</li>
       <li>Di Chrome/Edge desktop kamu memilih lokasi simpan dulu, lalu ISO ditulis langsung ke sana. Di HP/Android,
@@ -122,17 +145,18 @@ code { font-size: .88em; }
 <br>Dekompresi: <a href="https://github.com/101arrowz/fzstd">fzstd</a> dan <a href="https://github.com/101arrowz/fflate">fflate</a> oleh Arjun Barrett (MIT).</footer>
 </main>
 
+<script src="wii/engine.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const FSA = typeof window.showSaveFilePicker === 'function' && window.self === window.top;
 const CAN = typeof Worker === 'function' && !!(window.crypto && crypto.subtle);   // WebCrypto needs https
-let rvz = null, rvzOk = false, patch = null, hdr = null, busy = false;
+let rvz = null, kind = '', rvzOk = false, keyOk = false, patch = null, hdr = null, busy = false;
 
 const gb = n => (n / 1e9).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' GB';
 const mb = n => Math.round(n / 1e6).toLocaleString('id-ID') + ' MB';
 const str = (u8, a, b) => String.fromCharCode(...u8.subarray(a, b));
 function status(id, text, cls) { $(id).textContent = text; $(id).className = 'st ' + (cls || ''); }
-function refresh() { $('go').disabled = busy || !CAN || !(rvzOk && hdr); }
+function refresh() { $('go').disabled = busy || !CAN || !(rvzOk && (kind !== 'iso' || keyOk) && hdr); }
 
 function threads() {
   let n = Math.max(1, Math.min(6, (navigator.hardwareConcurrency || 4) - 1));
@@ -140,20 +164,50 @@ function threads() {
   return n;
 }
 
-// quick look at the game file: RVZ of RBSJ08 with Zstandard (or no) compression; ISO / WBFS get the conversion hint
+// quick look at the game file: 'rvz' (RBSJ08, Zstandard or no compression) or 'iso' (RBSJ08 Wii disc image)
 async function checkGame(f) {
   const h = new Uint8Array(await f.slice(0, 0x60).arrayBuffer());
-  const m = str(h, 0, 4);
+  const m = str(h, 0, 4), other = id => new Error(`Ini game lain (${id.replace(/[^ -~]/g, '?')}). Yang dibutuhkan disk Heroes, ID RBSJ08.`);
   if (m === 'RVZ\x01' || m === 'WIA\x01') {
     const comp = (h[0x4C] << 24) | (h[0x4D] << 16) | (h[0x4E] << 8) | h[0x4F];
-    if (str(h, 0x58, 0x5E) !== 'RBSJ08') throw new Error(`Ini game lain (${str(h, 0x58, 0x5E).replace(/[^ -~]/g, '?')}). Yang dibutuhkan disk Heroes, ID RBSJ08.`);
+    if (str(h, 0x58, 0x5E) !== 'RBSJ08') throw other(str(h, 0x58, 0x5E));
     if (comp !== 0 && comp !== 5) throw new Error('RVZ ini memakai kompresi selain Zstandard. Konversi ulang di Dolphin dengan Compression: Zstandard.');
-    return;
+    return 'rvz';
   }
-  if (m === 'WBFS') throw new Error('Ini file WBFS. Ubah dulu ke RVZ di Dolphin (lihat Bantuan).');
-  if (str(h, 0, 6) === 'RBSJ08') throw new Error('Ini file ISO. Ubah dulu ke RVZ di Dolphin (lihat Bantuan).');
-  throw new Error('File ini bukan RVZ. Ubah dulu game-mu ke RVZ di Dolphin (lihat Bantuan).');
+  if (h[0x18] === 0x5D && h[0x19] === 0x1C && h[0x1A] === 0x9E && h[0x1B] === 0xA3) {
+    if (str(h, 0, 6) !== 'RBSJ08') throw other(str(h, 0, 6));
+    return 'iso';
+  }
+  if (m === 'WBFS') throw new Error('Ini file WBFS. Ubah dulu ke ISO atau RVZ di Dolphin (lihat Bantuan).');
+  throw new Error('File ini bukan ISO Wii atau RVZ (lihat Bantuan).');
 }
+
+// the Wii common key for ISO input: pasted by the user, kept only in this browser
+const KEYSTORE = 'bsr2wii.commonkey';
+function savedKey() { try { return localStorage.getItem(KEYSTORE) || ''; } catch (_) { return ''; } }
+function storeKey(s) { try { localStorage.setItem(KEYSTORE, s); } catch (_) {} }
+let keyRun = 0, keyT = 0;
+async function checkKey() {
+  const my = ++keyRun, s = $('key').value.trim();
+  keyOk = false; refresh();
+  if (kind !== 'iso') return;
+  if (!s) { status('key-st', 'Tempel common key Wii untuk memakai ISO.'); return; }
+  const k = WiiPatch.parseKey(s);
+  if (!k) { status('key-st', '✗ Format kunci: 32 karakter hex (0-9, a-f).', 'bad'); return; }
+  status('key-st', 'Memeriksa kunci…');
+  try {
+    await WiiPatch.isoKeyCheck(async (o, n) => new Uint8Array(await rvz.slice(o, o + n).arrayBuffer()), k);
+    if (my !== keyRun) return;
+    keyOk = true; storeKey(s); status('key-st', '✓ Kunci cocok: ISO bisa dibaca.', 'ok');
+  } catch (err) { if (my === keyRun) status('key-st', '✗ ' + (err && err.message || err), 'bad'); }
+  refresh();
+}
+$('key').addEventListener('input', () => { clearTimeout(keyT); keyT = setTimeout(checkKey, 250); });
+$('ckuse').addEventListener('click', async () => {
+  const k = $('ck').textContent.trim();
+  try { await navigator.clipboard.writeText(k); } catch (_) {}
+  $('key').value = k; checkKey();
+});
 
 async function readPatchInfo(p) {
   const h = new Uint8Array(await p.slice(0, 12).arrayBuffer());
@@ -171,13 +225,20 @@ $('mode').textContent = !CAN ? 'Browser ini tidak didukung. Pakai Chrome, Edge a
   : 'Mode: unduhan langsung streaming (hemat memori, cocok untuk HP/Android).';
 
 $('rvz').addEventListener('change', async e => {
-  rvz = e.target.files[0] || null; rvzOk = false;
+  rvz = e.target.files[0] || null; rvzOk = false; kind = ''; keyOk = false;
   $('rvz-name').textContent = rvz ? `${rvz.name} · ${gb(rvz.size)}` : '';
-  status('rvz-st', '');
+  status('rvz-st', ''); $('keybox').hidden = true;
   refresh();
   if (!rvz) return;
-  try { await checkGame(rvz); rvzOk = true; status('rvz-st', '✓ RVZ Sengoku Basara 2 Heroes (RBSJ08). Isinya diperiksa saat memproses.', 'ok'); }
-  catch (err) { status('rvz-st', '✗ ' + err.message, 'bad'); }
+  try {
+    kind = await checkGame(rvz); rvzOk = true;
+    status('rvz-st', `✓ ${kind === 'iso' ? 'ISO' : 'RVZ'} Sengoku Basara 2 Heroes (RBSJ08). Isinya diperiksa saat memproses.`, 'ok');
+    if (kind === 'iso') {
+      $('keybox').hidden = false;
+      if (!$('key').value) $('key').value = savedKey();
+      checkKey();
+    }
+  } catch (err) { status('rvz-st', '✗ ' + err.message, 'bad'); }
   refresh();
 });
 
@@ -282,7 +343,7 @@ function runPatch(sink) {
       else if (d.type === 'error') fail(new Error(d.message));
       else if (d.type === 'done') { done = true; chain.then(() => { w.terminate(); return sink.close(); }).then(resolve, reject); }
     };
-    w.postMessage({ type: 'start', rvz, patch, threads: threads() });
+    w.postMessage({ type: 'start', game: rvz, key: kind === 'iso' ? $('key').value : null, patch, threads: threads() });
   });
 }
 

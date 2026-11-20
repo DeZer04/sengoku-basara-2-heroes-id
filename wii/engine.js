@@ -1,5 +1,6 @@
 /* Sengoku Basara 2 Heroes (Wii, RBSJ08) - Indonesian patch engine.
- * The user's own RVZ (Dolphin) + the .patch file -> a translated ISO, written front to back in one pass.
+ * The user's own RVZ (Dolphin) or ISO (+ the Wii common key the user supplies) + the .patch file -> a
+ * translated ISO, written front to back in one pass.
  * Same layout rules as the PC patcher (patch_wii.py) and the reference build, so the ISO is byte-identical
  * to the release; every 2 MiB group is checked against the H3 table the patch carries.
  * Environment-agnostic: the caller supplies file reads, zstd, the patch payload stream and AES (see run()).
@@ -145,7 +146,145 @@
       return out;
     }
   }
-  // the game partition is the last one stored in the RVZ
+  // ---------------------------------------------------------------- AES-128 decryption, synchronous (ISO input:
+  // the readers are synchronous, and WebCrypto only decrypts asynchronously and with padding)
+  const SB = new Uint8Array(256), SI = new Uint8Array(256), TD = [0, 1, 2, 3].map(() => new Uint32Array(256));
+  (function () {
+    const ex = new Uint8Array(510), lg = new Uint8Array(256);
+    for (let i = 0, v = 1; i < 255; i++) { ex[i] = ex[i + 255] = v; lg[v] = i; v ^= ((v << 1) ^ (v & 0x80 ? 0x1B : 0)) & 0xFF; }
+    const mul = (a, b) => (a && b ? ex[lg[a] + lg[b]] : 0);
+    for (let a = 0; a < 256; a++) {
+      const inv = a ? ex[255 - lg[a]] : 0;
+      let s = inv ^ 0x63;
+      for (let k = 1; k < 5; k++) s ^= ((inv << k) | (inv >>> (8 - k))) & 0xFF;
+      SB[a] = s; SI[s] = a;
+    }
+    for (let x = 0; x < 256; x++) {
+      const s = SI[x], t = ((mul(14, s) << 24) | (mul(9, s) << 16) | (mul(13, s) << 8) | mul(11, s)) >>> 0;
+      for (let k = 0; k < 4; k++) TD[k][x] = ((t >>> (8 * k)) | (t << (32 - 8 * k))) >>> 0;
+    }
+  })();
+  // round keys in decryption order (equivalent inverse cipher)
+  function aesDecKey(key) {
+    const w = new Uint32Array(44);
+    for (let i = 0; i < 4; i++) w[i] = be32(key, 4 * i);
+    for (let i = 4, rc = 1; i < 44; i++) {
+      let t = w[i - 1];
+      if (i % 4 === 0) {
+        t = ((SB[(t >>> 16) & 255] << 24) | (SB[(t >>> 8) & 255] << 16) | (SB[t & 255] << 8) | SB[t >>> 24]) ^ (rc << 24);
+        rc = (rc << 1) ^ (rc & 0x80 ? 0x11B : 0);
+      }
+      w[i] = w[i - 4] ^ t;
+    }
+    const dk = new Uint32Array(44);
+    for (let r = 0; r <= 10; r++) for (let j = 0; j < 4; j++) {
+      const v = w[4 * (10 - r) + j];
+      dk[4 * r + j] = r === 0 || r === 10 ? v : TD[0][SB[v >>> 24]] ^ TD[1][SB[(v >>> 16) & 255]] ^ TD[2][SB[(v >>> 8) & 255]] ^ TD[3][SB[v & 255]];
+    }
+    return dk;
+  }
+  // AES-128-CBC decryption without padding: src[so .. so+n) -> dst[o ..), n a multiple of 16
+  function cbcDec(dk, iv, src, so, n, dst, o) {
+    const T0 = TD[0], T1 = TD[1], T2 = TD[2], T3 = TD[3];
+    let p0 = be32(iv, 0), p1 = be32(iv, 4), p2 = be32(iv, 8), p3 = be32(iv, 12);
+    for (let b = 0; b < n; b += 16) {
+      const c0 = be32(src, so + b), c1 = be32(src, so + b + 4), c2 = be32(src, so + b + 8), c3 = be32(src, so + b + 12);
+      let s0 = c0 ^ dk[0], s1 = c1 ^ dk[1], s2 = c2 ^ dk[2], s3 = c3 ^ dk[3];
+      for (let k = 4; k < 40; k += 4) {
+        const t0 = T0[s0 >>> 24] ^ T1[(s3 >>> 16) & 255] ^ T2[(s2 >>> 8) & 255] ^ T3[s1 & 255] ^ dk[k];
+        const t1 = T0[s1 >>> 24] ^ T1[(s0 >>> 16) & 255] ^ T2[(s3 >>> 8) & 255] ^ T3[s2 & 255] ^ dk[k + 1];
+        const t2 = T0[s2 >>> 24] ^ T1[(s1 >>> 16) & 255] ^ T2[(s0 >>> 8) & 255] ^ T3[s3 & 255] ^ dk[k + 2];
+        const t3 = T0[s3 >>> 24] ^ T1[(s2 >>> 16) & 255] ^ T2[(s1 >>> 8) & 255] ^ T3[s0 & 255] ^ dk[k + 3];
+        s0 = t0; s1 = t1; s2 = t2; s3 = t3;
+      }
+      put32be(dst, o + b, ((SI[s0 >>> 24] << 24) | (SI[(s3 >>> 16) & 255] << 16) | (SI[(s2 >>> 8) & 255] << 8) | SI[s1 & 255]) ^ dk[40] ^ p0);
+      put32be(dst, o + b + 4, ((SI[s1 >>> 24] << 24) | (SI[(s0 >>> 16) & 255] << 16) | (SI[(s3 >>> 8) & 255] << 8) | SI[s2 & 255]) ^ dk[41] ^ p1);
+      put32be(dst, o + b + 8, ((SI[s2 >>> 24] << 24) | (SI[(s1 >>> 16) & 255] << 16) | (SI[(s0 >>> 8) & 255] << 8) | SI[s3 & 255]) ^ dk[42] ^ p2);
+      put32be(dst, o + b + 12, ((SI[s3 >>> 24] << 24) | (SI[(s2 >>> 16) & 255] << 16) | (SI[(s1 >>> 8) & 255] << 8) | SI[s0 & 255]) ^ dk[43] ^ p3);
+      p0 = c0; p1 = c1; p2 = c2; p3 = c3;
+    }
+  }
+  // '0x..', spaces or dashes allowed; null unless exactly 16 bytes of hex
+  function parseKey(s) {
+    const h = String(s || '').replace(/0x/gi, '').replace(/[\s:,-]/g, '');
+    if (!/^[0-9a-f]{32}$/i.test(h)) return null;
+    const k = new Uint8Array(16);
+    for (let i = 0; i < 16; i++) k[i] = parseInt(h.substr(2 * i, 2), 16);
+    return k;
+  }
+
+  // ---------------------------------------------------------------- Wii ISO reader (encrypted partition)
+  // The title key is in the ticket, encrypted with the Wii common key: the user supplies that key (it is not part
+  // of this patcher). The helper workers get the title key itself.
+  class ISO {
+    constructor(read, commonKey, titleKey) {
+      this.read = read;
+      const h = read(0, 0x80);
+      if (be32(h, 0x18) !== 0x5D1C9EA3) fail('File game bukan ISO Wii atau RVZ.');
+      this.dhead = h;
+      const pt = read(0x40000, 0x20), nP = be32(pt, 0), ents = read(be32(pt, 4) * 4, 8 * nP);
+      let game = -1;
+      for (let k = 0; k < nP; k++) if (be32(ents, 8 * k + 4) === 0) game = be32(ents, 8 * k) * 4;
+      if (game < 0) fail('Partisi game tidak ditemukan: dump ini tidak sesuai.');
+      const ph = read(game, 0x2C0);
+      this.base = game + be32(ph, 0x2B8) * 4; this.size = be32(ph, 0x2BC) * 4;
+      if (!titleKey) {
+        if (!commonKey || commonKey.length !== 16) fail('ISO Wii butuh common key Wii: tempel dulu kuncinya di kolom kunci.');
+        if (ph[0x1F1] !== 0) fail('Disk ini memakai kunci selain common key Wii biasa.');
+        const iv = new Uint8Array(16); iv.set(ph.subarray(0x1DC, 0x1E4));
+        titleKey = new Uint8Array(16); cbcDec(aesDecKey(commonKey), iv, ph, 0x1BF, 16, titleKey, 0);
+      }
+      this.parts = [{ key: titleKey }];
+      this.dk = aesDecKey(titleKey); this.cache = new Map();
+      const b = this.readPart(0, 0, 6);          // the partition starts with the game's own disc header
+      for (let i = 0; i < 6; i++) if (b[i] !== h[i]) fail('Common key salah: isi ISO tidak bisa dibaca. Periksa lagi kunci yang kamu tempel.');
+    }
+    group(g) {                                  // the 64 clusters of group g, decrypted (data parts only)
+      let d = this.cache.get(g);
+      if (d) return d;
+      const ncl = Math.min(64, this.size / CL - g * 64);
+      if (!(ncl > 0)) fail('Data di luar partisi game: dump ini tidak sesuai.');
+      const enc = this.read(this.base + g * 64 * CL, ncl * CL);
+      if (enc.length < ncl * CL) fail('ISO terpotong: file game tidak lengkap.');
+      d = new Uint8Array(GD);
+      for (let c = 0; c < ncl; c++) cbcDec(this.dk, enc.subarray(c * CL + 0x3D0, c * CL + 0x3E0), enc, c * CL + 0x400, CD, d, c * CD);
+      if (this.cache.size >= 4) this.cache.delete(this.cache.keys().next().value);
+      this.cache.set(g, d);
+      return d;
+    }
+    readPartInto(pi, off, n, out, o) {
+      while (n > 0) {
+        const g = Math.floor(off / GD), s = off - g * GD, k = Math.min(n, GD - s);
+        out.set(this.group(g).subarray(s, s + k), o);
+        o += k; off += k; n -= k;
+      }
+    }
+    readPart(pi, off, n) { const out = new Uint8Array(n); this.readPartInto(pi, off, n, out, 0); return out; }
+    readRaw(off, n) { const out = new Uint8Array(n); out.set(this.read(off, n).subarray(0, n)); return out; }
+  }
+
+  // the user's game: RVZ / WIA (Dolphin, the keys are inside) or a plain Wii ISO (common key, or the title key)
+  function openGame(read, zstd, commonKey, titleKey) {
+    const h = read(0, 0x20), m = String.fromCharCode(h[0], h[1], h[2], h[3]);
+    if (m === 'RVZ\x01' || m === 'WIA\x01') return new RVZ(read, zstd);
+    if (be32(h, 0x18) === 0x5D1C9EA3) return new ISO(read, commonKey, titleKey);
+    if (m === 'WBFS') fail('File WBFS belum didukung. Ubah dulu ke ISO atau RVZ di Dolphin (lihat petunjuk).');
+    return fail('File game bukan ISO Wii atau RVZ.');
+  }
+  // the page's check of a pasted key: the few reads an ISO needs to open, done asynchronously first
+  async function isoKeyCheck(readAsync, commonKey) {
+    const got = new Map(), get = async (o, n) => { const b = await readAsync(o, n); got.set(o, b); return b; };
+    const pt = await get(0x40000, 0x20), nP = be32(pt, 0), ents = await get(be32(pt, 4) * 4, 8 * nP);
+    await get(0, 0x80);
+    let game = -1;
+    for (let k = 0; k < nP; k++) if (be32(ents, 8 * k + 4) === 0) game = be32(ents, 8 * k) * 4;
+    if (game < 0) fail('Partisi game tidak ditemukan: dump ini tidak sesuai.');
+    const ph = await get(game, 0x2C0);
+    await get(game + be32(ph, 0x2B8) * 4, Math.min(64, be32(ph, 0x2BC) * 4 / CL) * CL);
+    return new ISO((o, n) => (got.get(o) || fail('ISO tidak terbaca.')).subarray(0, n), commonKey);
+  }
+
+  // the game partition is the last one stored in the RVZ (the only one of an ISO reader)
   const gamePart = r => r.parts.length - 1;
 
   // ---------------------------------------------------------------- patch header
@@ -236,8 +375,8 @@
   async function run(env) {
     const { man, tmd: newTmd, h3 } = env.patch;
     const log = env.log || (() => {}), progress = env.progress || (() => {});
-    log('Membaca RVZ…');
-    const r = new RVZ(env.rvzRead, env.zstd);
+    log('Membaca game…');
+    const r = env.game || openGame(env.rvzRead, env.zstd, env.commonKey);
     if (String.fromCharCode(...r.dhead.subarray(0, 6)) !== 'RBSJ08') fail('Dump ini bukan RBSJ08 (Sengoku Basara 2 Heroes, disk Heroes dari Double Pack Jepang).');
     const pt = r.readRaw(0x40000, 0x20), nP = be32(pt, 0), ents = r.readRaw(be32(pt, 4) * 4, 8 * nP);
     let game = null;
@@ -392,7 +531,7 @@
     return { enc: async (iv, u8) => new Uint8Array(await subtle.encrypt({ name: 'AES-CBC', iv }, k, u8), 0, u8.length) };
   }
 
-  const api = { run, parsePatch, payloadReader, doGroup, subtleAes, sha1, RVZ };
+  const api = { run, parsePatch, payloadReader, doGroup, subtleAes, sha1, RVZ, ISO, openGame, isoKeyCheck, parseKey, cbcDec, aesDecKey };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.WiiPatch = api;
 })(typeof self !== 'undefined' ? self : this);

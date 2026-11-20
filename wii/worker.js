@@ -1,4 +1,4 @@
-/* Web Worker of patcher-wii.html: runs the patch engine on the user's RVZ and the .patch file, posting the ISO
+/* Web Worker of patcher-wii.html: runs the patch engine on the user's RVZ or ISO and the .patch file, posting the ISO
  * in chunks to the page (which writes them to a file or a streaming download). Files are read synchronously
  * (FileReaderSync), zstd / zlib are decoded with fzstd / fflate (vendor/), AES runs on WebCrypto. The groups are
  * built by helper workers (pool.js, one per core) when the browser allows workers inside workers, else here.
@@ -12,14 +12,14 @@ self.onmessage = e => {
   if (d.type === 'ack') {
     pending -= d.n;
     if (pending <= LIMIT) { const w = waiters; waiters = []; w.forEach(f => f()); }
-  } else if (d.type === 'start') start(d.rvz, d.patch, d.threads).catch(err =>
+  } else if (d.type === 'start') start(d.game, d.patch, d.threads, d.key).catch(err =>
     self.postMessage({ type: 'error', message: err && err.user ? err.message : 'Kesalahan tak terduga: ' + (err && err.message || err) }));
 };
 
 function userError(msg) { const e = new Error(msg); e.user = true; return e; }
 
-// k helper workers, each with its own reader of the RVZ; [] when nested workers are unavailable or fail to start
-async function startPool(rvzFile, k) {
+// k helper workers, each with its own reader of the game; [] when nested workers are unavailable or fail to start
+async function startPool(gameFile, k, titleKey) {
   if (typeof Worker !== 'function' || !(k > 0)) return [];
   const pool = [];
   for (let i = 0; i < k; i++) {
@@ -39,7 +39,7 @@ async function startPool(rvzFile, k) {
       }
     };
     w.onerror = e => { e.preventDefault && e.preventDefault(); failAll(new Error('Worker bantu berhenti' + (e.message ? ': ' + e.message : ''))); };
-    w.postMessage({ type: 'init', rvz: rvzFile });
+    w.postMessage({ type: 'init', game: gameFile, titleKey });
     pool.push({ w, ready, exec: job => new Promise((res, rej) => {
       const id = seq++; calls.set(id, { res, rej });
       w.postMessage({ type: 'job', id, job }, [job.data.buffer, job.parts.buffer]);
@@ -50,23 +50,25 @@ async function startPool(rvzFile, k) {
     return pool;
   } catch (err) {
     pool.forEach(p => p.w.terminate());
-    if (err && err.user) throw err;               // the RVZ itself is unusable: same answer without the pool
+    if (err && err.user) throw err;               // the game file itself is unusable: same answer without the pool
     return [];
   }
 }
 
-async function start(rvzFile, patchFile, threads) {
+async function start(gameFile, patchFile, threads, key) {
   const fr = new FileReaderSync();
   const reader = f => (off, n) => new Uint8Array(fr.readAsArrayBuffer(f.slice(off, off + n)));
-  const readP = reader(patchFile);
+  const readP = reader(patchFile), zstd = u8 => fzstd.decompress(u8);
   const patch = WiiPatch.parsePatch(readP);
   self.postMessage({ type: 'info', version: patch.man.version, size: patch.man.iso[0] });
-  const pool = await startPool(rvzFile, threads);
+  const game = WiiPatch.openGame(reader(gameFile), zstd, WiiPatch.parseKey(key));
+  const pool = await startPool(gameFile, threads, game instanceof WiiPatch.ISO ? game.parts[0].key : undefined);
   self.postMessage({ type: 'threads', n: pool.length || 1 });
   try {
     const res = await WiiPatch.run({
-      rvzRead: reader(rvzFile),
-      zstd: u8 => fzstd.decompress(u8),
+      game,
+      rvzRead: reader(gameFile),
+      zstd,
       patch,
       take: WiiPatch.payloadReader(readP, patch.dataOffset, patchFile.size, fflate.Unzlib),
       aes: WiiPatch.subtleAes,

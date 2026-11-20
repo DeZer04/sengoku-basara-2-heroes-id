@@ -53,10 +53,13 @@ Terjemahan yang sama untuk disk **Heroes** dari *Sengoku Basara 2 Heroes Double 
 File ada di rilis **[wii-v0.99](../../releases/tag/wii-v0.99)**: `basara2_wii_id_v0.99.patch`, `patch_wii.py` dan
 `CARA_PATCH_WII.txt`.
 
-1. Ubah game milikmu ke **RVZ** di Dolphin: *Convert File*, Format RVZ, Compression Zstandard. Isi disk Wii
-   terenkripsi, dan membaca ISO/WBFS langsung butuh kunci Nintendo yang sengaja tidak disertakan.
-2. Pasang patch lewat [`patcher-wii.html`](patcher-wii.html) di Chrome/Edge (PC atau HP Android), atau
-   `python patch_wii.py "game.rvz" "hasil.iso" basara2_wii_id_v0.99.patch`.
+1. Siapkan game milikmu sebagai **ISO** atau **RVZ**. ISO butuh **common key Wii** (isi disk Wii terenkripsi);
+   kuncinya tersedia di patcher Wii (tombol *Salin & pakai*). RVZ tidak butuh kunci. WBFS
+   diubah dulu di Dolphin: *Convert File*, Format RVZ, Compression Zstandard.
+2. Pasang patch lewat [`patcher-wii.html`](patcher-wii.html) di Chrome/Edge (PC atau HP Android; untuk ISO tekan
+   *Salin & pakai* di kolom common key), atau
+   `python patch_wii.py "game.iso" "hasil.iso" basara2_wii_id_v0.99.patch` (kunci dari file `.env` berisi
+   `WII_COMMON_KEY=...`, `--key=...`, atau ditempel saat diminta).
 3. Mainkan ISO hasil di Dolphin (PC/Android), atau di Wii asli lewat USB Loader GX / WiiFlow dengan cIOS.
 
 Hasil patch: ISO 4.454.055.936 byte, SHA-1 `725DF73E8C93CFB8D5C97A15E1FFA229E402D9A5`. Dolphin Android kadang memunculkan peringatan
