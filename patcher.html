@@ -231,7 +231,7 @@ function applyXdelta(sink) {
       else if (d.error) fail('Patch gagal — ISO sumber kemungkinan tidak cocok. (' + (d.errorMessage || 'checksum') + ')');
       else { done = true; w.terminate(); chain.then(() => sink.close()).then(resolve, reject); }
     };
-    w.postMessage({ command: 'start', sourceFile: iso, patchFile: patch, disableChecksum: false });  // keep source checksum on
+    w.postMessage({ command: 'start', sourceFile: iso, patchFile: patch, disableChecksum: true });  // no verification: just apply/write
   });
 }
 

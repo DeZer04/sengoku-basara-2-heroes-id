@@ -3,284 +3,60 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sengoku Basara 2 Heroes — Terjemahan Indonesia</title>
-<meta name="description" content="Patch terjemahan Bahasa Indonesia untuk Sengoku Basara 2 Heroes (PS2 dan Wii). Gratis. Pasang langsung di browser.">
-<meta property="og:title" content="Sengoku Basara 2 Heroes — Terjemahan Bahasa Indonesia v0.98">
-<meta property="og:description" content="Patch penggemar, GRATIS. Teks, spanduk, nama jurus, perlengkapan dan video ikut diterjemahkan.">
+<title>Sengoku Basara 2 Heroes — Terjemahan Indonesia (PS2 &amp; Wii)</title>
+<meta name="description" content="Patch terjemahan Bahasa Indonesia untuk Sengoku Basara 2 Heroes. Pilih platform: PlayStation 2 atau Wii. Gratis, pasang langsung di browser.">
+<meta property="og:title" content="Sengoku Basara 2 Heroes — Terjemahan Bahasa Indonesia">
+<meta property="og:description" content="Patch penggemar, GRATIS — untuk PS2 dan Wii. Teks, spanduk, nama jurus, perlengkapan dan video ikut diterjemahkan.">
 <meta property="og:image" content="https://dezer04.github.io/sengoku-basara-2-heroes-id/assets/sampul.jpg">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@700;800&family=Noto+Sans:wght@400;600;700&display=swap">
-<style>
-/* one dark lacquer-and-gold look, like the game's banners; single column with full-width bands */
-:root {
-  --bg: #0e0b0c;
-  --band: #17110f;
-  --panel: #1e1716;
-  --line: #3a2a26;
-  --text: #f1e9e3;
-  --muted: #b7a9a1;
-  --red: #c21f2b;
-  --red-deep: #7d1018;
-  --gold: #e3b552;
-  --display: "Saira Condensed", "Arial Narrow", Impact, sans-serif;
-  --body: "Noto Sans", "Segoe UI", system-ui, sans-serif;
-  color-scheme: dark;
-}
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.65 var(--body); }
-a { color: var(--gold); }
-img { max-width: 100%; height: auto; display: block; }
-.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px)); }
-.band { padding-block: 56px; border-top: 1px solid var(--line); }
-.band.alt { background: var(--band); }
-h1, h2, h3 { font-family: var(--display); line-height: 1.05; margin: 0; text-wrap: balance; letter-spacing: .01em; }
-h2 { font-size: clamp(30px, 5vw, 42px); margin-bottom: 8px; }
-h2 + p.lede { color: var(--muted); margin: 0 0 28px; max-width: 62ch; }
-.eyebrow { color: var(--gold); font: 700 13px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; }
-
-/* hero */
-.hero { position: relative; overflow: hidden; padding-block: 56px 48px;
-  background: radial-gradient(1200px 500px at 85% 0%, rgba(194,31,43,.38), transparent 60%),
-              linear-gradient(160deg, #1a0f10 0%, var(--bg) 60%); }
-.hero::after { content: ""; position: absolute; inset: auto -10% -60px -10%; height: 140px;
-  background: linear-gradient(90deg, transparent, rgba(194,31,43,.5), transparent); transform: rotate(-3deg); filter: blur(18px); }
-.hero .wrap { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 40px; align-items: center; }
-.hero h1 { font-size: clamp(44px, 8vw, 84px); font-weight: 800; text-transform: uppercase; }
-.hero h1 span { color: var(--gold); display: block; }
-.hero .sub { font: 700 clamp(18px, 2.6vw, 24px)/1.25 var(--body); margin: 14px 0 18px; }
-.badges { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 26px; }
-.badge { font: 800 18px/1 var(--display); letter-spacing: .04em; padding: 9px 14px; transform: skew(-12deg); }
-.badge b { display: inline-block; transform: skew(12deg); }
-.badge.red { background: var(--red); }
-.badge.gold { background: var(--gold); color: #1a1208; }
-.cta { display: flex; flex-wrap: wrap; gap: 12px; }
-.btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font: 700 16px/1 var(--body);
-  padding: 15px 20px; border-radius: 6px; border: 2px solid var(--red); color: var(--text); }
-.btn.primary { background: var(--red); }
-.btn:hover { filter: brightness(1.12); }
-.btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
-.shot { border: 2px solid var(--gold); box-shadow: 0 20px 50px rgba(0,0,0,.6); transform: rotate(1.5deg); }
-.free { background: var(--red-deep); border-block: 1px solid var(--red); }
-.free p { margin: 0; padding-block: 14px; font-weight: 600; }
-
-/* download table */
-.dl { display: grid; gap: 12px; }
-.dl-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: center;
-  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; }
-.dl-row h3 { font-size: 24px; }
-.dl-row p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
-.dl-links { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
-.dl-links a { text-decoration: none; font: 700 14px/1 var(--body); padding: 11px 14px; border-radius: 6px; background: #2a1d1b; border: 1px solid var(--line); color: var(--text); white-space: nowrap; }
-.dl-links a.main { background: var(--red); border-color: var(--red); }
-.tag { display: inline-block; font: 700 11px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; color: #1a1208; background: var(--gold); padding: 4px 7px; border-radius: 3px; vertical-align: middle; margin-left: 6px; }
-
-/* steps */
-.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; counter-reset: s; }
-.step { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: grid; gap: 8px; align-content: start; }
-.step h3 { font-size: 23px; }
-.step p { margin: 0; color: var(--muted); font-size: 15px; }
-.step code, td code { font: 13px ui-monospace, Consolas, monospace; background: #0b0809; padding: 2px 6px; border-radius: 4px; color: var(--text); overflow-wrap: anywhere; }
-.tbl { overflow-x: auto; margin-top: 18px; }
-table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
-th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-th { color: var(--muted); font-weight: 600; width: 120px; }
-
-/* features */
-.feats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.feat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; }
-.feat img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-bottom: 1px solid var(--line); }
-.feat div { padding: 14px 16px 16px; }
-.feat h3 { font-size: 22px; margin-bottom: 4px; }
-.feat p { margin: 0; color: var(--muted); font-size: 14px; }
-.compare { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: center; }
-.compare img { border: 1px solid var(--line); border-radius: 8px; }
-
-/* platforms + faq */
-.plats { display: flex; flex-wrap: wrap; gap: 10px; }
-.plat { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-weight: 600; font-size: 14px; }
-details { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
-details + details { margin-top: 10px; }
-summary { cursor: pointer; font-weight: 700; }
-details p { margin: 10px 0 0; color: var(--muted); }
-footer { border-top: 1px solid var(--line); padding-block: 32px 48px; color: var(--muted); font-size: 14px; }
-footer p { margin: 0 0 8px; }
-
-@media (max-width: 820px) {
-  .hero .wrap, .compare { grid-template-columns: minmax(0, 1fr); }
-  .steps, .feats { grid-template-columns: minmax(0, 1fr); }
-  .shot { transform: none; }
-  .dl-row { grid-template-columns: minmax(0, 1fr); }
-  .dl-links { justify-content: flex-start; }
-}
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header class="hero">
+<main class="pick">
   <div class="wrap">
-    <div>
-      <div class="eyebrow">Patch penggemar · PS2 SLPM-66848 · Wii RBSJ08</div>
+    <div class="pick-head">
+      <span class="eyebrow">Patch penggemar · GRATIS</span>
       <h1>Sengoku Basara 2 <span>Heroes</span></h1>
-      <p class="sub">Terjemahan Bahasa Indonesia</p>
-      <div class="badges"><span class="badge red"><b>v0.98 BETA</b></span><span class="badge gold"><b>GRATIS</b></span></div>
-      <div class="cta">
-        <a class="btn primary" href="patcher.html">Patch di browser</a>
-        <a class="btn" href="#unduh">Unduh file patch</a>
-        <a class="btn" href="#wii">Versi Wii</a>
-      </div>
+      <p>Terjemahan Bahasa Indonesia — pilih platform kamu.</p>
     </div>
-    <img class="shot" src="assets/judul.jpg" width="827" height="620" alt="Layar judul Sengoku Basara 2 Heroes versi terjemahan: KISAH PAHLAWAN, Tekan tombol START">
-  </div>
-</header>
 
-<div class="free"><div class="wrap"><p>Patch ini GRATIS. Kalau kamu membayar untuk mendapatkannya, kamu tertipu. Dilarang menjual patch ini maupun ISO hasil patch.</p></div></div>
-
-<section class="band" id="unduh">
-  <div class="wrap">
-    <h2>Unduh</h2>
-    <p class="lede">Ambil <b>FULL ISO</b> yang sudah siap pakai, atau file <b>.xdelta</b> (kecil) lalu pasang sendiri lewat <a href="patcher.html">patcher di browser</a>, DeltaPatcher, atau xdelta.</p>
-    <div class="dl">
-      <div class="dl-row">
-        <div><h3>LINK Download FULL ISO</h3><p>ISO siap pakai dalam format full.</p></div>
-        <div class="dl-links">
-          <a class="main" href="https://pixeldrain.com/u/UWMZ6Mj6">Full Indo</a>
-          <a href="https://pixeldrain.com/u/iTodzjQ8">Full Indo + Uangx10</a>
+    <div class="cards">
+      <a class="pcard ps2" href="ps2.html" aria-label="Versi PlayStation 2">
+        <div class="cover">
+          <span class="plat-tag">PS2</span>
+          <img src="assets/cover_ps2.jpg" width="640" height="912" alt="Sampul Sengoku Basara 2 Heroes versi PlayStation 2">
         </div>
-      </div>
-      <div class="dl-row">
-        <div><h3>Terjemahan <span class="tag">Disarankan</span></h3><p>Semua terjemahan, tanpa perubahan lain.</p></div>
-        <div class="dl-links">
-          <a class="main" href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/download/v0.98/basara2_id_v0.98.xdelta">.xdelta · 519 MB</a>
+        <div class="meta">
+          <div class="plat-name">PlayStation 2</div>
+          <p class="plat-sub">SLPM-66848 · emulator (PCSX2/Android) &amp; PS2 asli (OPL)</p>
+          <span class="enter">Masuk &amp; unduh
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </span>
         </div>
-      </div>
-      <div class="dl-row">
-        <div><h3>Terjemahan + koban ×10</h3><p>Semua koban (uang) yang didapat dikali 10. Batas uang dari game tetap berlaku.</p></div>
-        <div class="dl-links">
-          <a class="main" href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/download/v0.98/basara2_id_v0.98_koban10.xdelta">.xdelta · 519 MB</a>
+      </a>
+
+      <a class="pcard wii" href="wii.html" aria-label="Versi Nintendo Wii">
+        <div class="cover">
+          <span class="plat-tag">WII</span>
+          <img src="assets/cover_wii.png" width="475" height="676" alt="Sampul Sengoku Basara 2 Heroes versi Wii">
         </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="band alt" id="pasang">
-  <div class="wrap">
-    <h2>Cara memasang</h2>
-    <p class="lede">Kamu butuh ISO <b>Sengoku Basara 2 - Heroes (Japan)</b> milikmu sendiri. Paket ini tidak berisi game.</p>
-    <div class="steps">
-      <div class="step">
-        <h3>Patch di browser <span class="tag">Disarankan</span></h3>
-        <p>Buka <a href="patcher.html">patcher</a> di Chrome/Edge (juga di HP Android). Pilih ISO asli dan file <code>.xdelta</code>, lalu klik <b>Patch sekarang</b> — memakai mesin xdelta3 asli, cepat. Semua proses di perangkatmu, tidak ada yang diunggah.</p>
-      </div>
-      <div class="step">
-        <h3>DeltaPatcher (HP/PC)</h3>
-        <p>Aplikasi DeltaPatcher (Android/Windows): pilih ISO asli sebagai sumber dan file <code>.xdelta</code> sebagai patch, lalu Apply.</p>
-      </div>
-      <div class="step">
-        <h3>Baris perintah</h3>
-        <p>Pakai xdelta3:<br><code>xdelta3 -d -s "ISO asli.iso" basara2_id_v0.98.xdelta "ISO hasil.iso"</code></p>
-      </div>
-    </div>
-    <div class="tbl">
-      <table>
-        <tr><th>ISO asli</th><td>Sengoku Basara 2 - Heroes (Japan), dump Redump, satu file <code>.iso</code></td></tr>
-        <tr><th>Ukuran</th><td>4.677.795.840 byte</td></tr>
-        <tr><th>CRC32</th><td><code>23716FDA</code></td></tr>
-        <tr><th>MD5</th><td><code>B684898977107972D31BA3DFEE591F31</code></td></tr>
-        <tr><th>SHA-1</th><td><code>96F0C5894ED98CDCCD6EBE10FF60B32D6BDEE2C8</code></td></tr>
-        <tr><th>Hasil patch</th><td>Terjemahan: <code>E3DEA5F4BFD2134213251495CF644AFE307B6739</code><br>+ koban ×10: <code>21F7F9B9BF07CAC43FD4858F74BEDB147F6D0851</code> (SHA-1)</td></tr>
-      </table>
-    </div>
-  </div>
-</section>
-
-<section class="band" id="wii">
-  <div class="wrap">
-    <div class="eyebrow">Wii · RBSJ08</div>
-    <h2>Versi Wii</h2>
-    <p class="lede">Terjemahan yang sama untuk Sengoku Basara 2 Heroes di <b>Wii</b> (disk Heroes dari Double Pack, Jepang). Font, pemenggalan dialog dan layar khusus Wii disesuaikan dengan sistem Wii. Main di Dolphin (PC/Android) atau di Wii asli lewat USB Loader.</p>
-    <div class="dl">
-      <div class="dl-row">
-        <div><h3>Patch Wii v0.99 <span class="tag">Beta</span></h3><p>Dipasang ke game RVZ milikmu sendiri. Hasilnya ISO Wii 4,45 GB.</p></div>
-        <div class="dl-links">
-          <a class="main" href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/download/wii-v0.99/basara2_wii_id_v0.99.patch">.patch · 729 MB</a>
-          <a href="patcher-wii.html">Patcher Wii</a>
+        <div class="meta">
+          <div class="plat-name">Nintendo Wii</div>
+          <p class="plat-sub">RBSJ08 · Dolphin (PC/Android) &amp; Wii asli (USB Loader)</p>
+          <span class="enter">Masuk &amp; unduh
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </span>
         </div>
-      </div>
+      </a>
     </div>
-    <div class="steps" style="margin-top: 14px">
-      <div class="step">
-        <h3>1. Ubah ke RVZ</h3>
-        <p>Di Dolphin: klik kanan game (PC) atau tekan lama game (Android), pilih <b>Convert File</b>, Format <b>RVZ</b>, Compression <b>Zstandard</b>. File aslimu tidak diubah.</p>
-      </div>
-      <div class="step">
-        <h3>2. Patch di browser <span class="tag">Disarankan</span></h3>
-        <p>Buka <a href="patcher-wii.html">patcher Wii</a> di Chrome/Edge (juga di HP Android), pilih file <code>.rvz</code> dan <code>.patch</code>, lalu klik <b>Patch sekarang</b>. Di PC tersedia juga <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/download/wii-v0.99/patch_wii.py">patch_wii.py</a> (Python).</p>
-      </div>
-      <div class="step">
-        <h3>3. Main</h3>
-        <p>Buka ISO hasil di Dolphin (PC/Android). Wii asli: lewat USB Loader GX atau WiiFlow dengan cIOS. Mau hemat ruang? Ubah ISO hasil ke RVZ (±3,8 GB).</p>
-      </div>
-    </div>
-    <div class="tbl">
-      <table>
-        <tr><th>Game</th><td>Sengoku Basara 2 Heroes Double Pack (Jepang), disk <b>Heroes</b>, ID <code>RBSJ08</code>, dump dari disk milikmu sendiri</td></tr>
-        <tr><th>Masukan</th><td>RVZ buatan Dolphin (Zstandard). ISO atau WBFS diubah dulu ke RVZ.</td></tr>
-        <tr><th>Hasil patch</th><td>ISO 4.454.055.936 byte, SHA-1 <code>725DF73E8C93CFB8D5C97A15E1FFA229E402D9A5</code></td></tr>
-      </table>
-    </div>
-  </div>
-</section>
 
-<section class="band alt" id="fitur">
-  <div class="wrap">
-    <h2>Yang diterjemahkan</h2>
-    <p class="lede">Semua terjemahan ada langsung di dalam game. Tidak perlu cheat atau texture pack.</p>
-    <div class="feats">
-      <div class="feat"><img src="assets/menu.jpg" width="827" height="620" loading="lazy" alt="Menu utama berbahasa Indonesia"><div><h3>Menu &amp; semua teks</h3><p>Menu, dialog cerita, 9.227 dialog pertempuran, profil karakter, toko dan galeri. Gaya bicara tiap karakter dipertahankan.</p></div></div>
-      <div class="feat"><img src="assets/pertempuran.jpg" width="827" height="620" loading="lazy" alt="Pertempuran dengan nama jurus Roda Api"><div><h3>Nama jurus &amp; HUD</h3><p>Nama jurus Indonesia, spanduk pertempuran, kartu MENANG, combo DOUBLE! / TRIPLE! / BASARA.</p></div></div>
-      <div class="feat"><img src="assets/equip.jpg" width="827" height="620" loading="lazy" alt="Layar Equip dengan syarat menang dan kalah"><div><h3>494 perlengkapan</h3><p>Nama dan deskripsi senjata, zirah dan aksesori ditulis ulang supaya jelas dan muat di layar.</p></div></div>
-      <div class="feat"><img src="assets/kartu_nama.jpg" width="512" height="448" loading="lazy" alt="Kartu nama Katakura Kojuro di video pembuka"><div><h3>Video pembuka</h3><p>13 kartu nama karakter beserta nama pengisi suaranya.</p></div></div>
-      <div class="feat"><img src="assets/kartu_bab.jpg" width="512" height="448" loading="lazy" alt="Video bab Kisah Date Masamune"><div><h3>30 video bab</h3><p>Teks cerita, nama, kartu judul dan judul penutup di setiap video pembuka bab.</p></div></div>
-      <div class="feat"><img src="assets/laga_sengit.jpg" width="512" height="448" loading="lazy" alt="Video promo LAGA SENGIT DIMULAI"><div><h3>Turnamen</h3><p>Video promo Turnamen Besar dan Laga Sengit, mode Turnamen Extreme, nama-nama petarung turnamen.</p></div></div>
-    </div>
+    <p class="pick-note">Patch ini GRATIS dan tidak berisi game — kamu wajib punya ISO/disk hasil dump sendiri.
+      · <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id">GitHub</a></p>
   </div>
-</section>
+</main>
 
-<section class="band" id="perbandingan">
-  <div class="wrap compare">
-    <div>
-      <h2>Sebelum dan sesudah</h2>
-      <p class="lede">Tulisan di gambar dan video digambar ulang mengikuti gaya aslinya, bukan sekadar ditimpa teks.</p>
-      <div class="plats">
-        <span class="plat">PCSX2</span><span class="plat">ARMSX2</span><span class="plat">AetherSX2 / NetherSX2</span><span class="plat">PS2 asli (OPL)</span><span class="plat">Dolphin (Wii)</span><span class="plat">Wii asli (USB Loader)</span>
-      </div>
-    </div>
-    <img src="assets/sebelum_sesudah.jpg" width="1080" height="1350" loading="lazy" alt="Perbandingan versi Jepang dan versi terjemahan: kartu nama, kartu bab, judul Laga Sengit, TERCAPAI">
-  </div>
-</section>
-
-<section class="band alt" id="faq">
-  <div class="wrap">
-    <h2>Tanya jawab</h2>
-    <details><summary>Apakah save game versi Jepang bisa dipakai?</summary><p>Bisa. Save memory card Sengoku Basara 2 Heroes versi Jepang tetap jalan, dan bisa dipakai bergantian dengan varian koban ×10.</p></details>
-    <details><summary>Bisa mem-patch langsung di HP?</summary><p>Bisa lewat patcher di Chrome Android. Butuh ruang kosong ±4,7 GB dan layar harus tetap menyala sampai selesai. Mem-patch di PC lalu menyalin hasilnya ke HP biasanya lebih cepat.</p></details>
-    <details><summary>Kenapa cheat atau widescreen saya tidak aktif di varian koban ×10?</summary><p>Varian itu mengubah file program game, jadi CRC-nya di PCSX2 berbeda dan patch .pnach yang memakai CRC asli tidak berlaku. Varian terjemahan biasa tidak mengubah CRC.</p></details>
-    <details><summary>Apakah FULL ISO disediakan?</summary><p>Ya. Tautan FULL ISO tersedia di bagian Unduh: Full Indo dan Full Indo + Uang×10.</p></details>
-    <details><summary>Versi Wii: kenapa game harus RVZ?</summary><p>Isi disk Wii terenkripsi. Membaca ISO atau WBFS langsung butuh kunci enkripsi milik Nintendo, dan kunci itu sengaja tidak disertakan di patcher. RVZ buatan Dolphin sudah bisa dibaca patcher, jadi cukup ubah game ke RVZ dulu (Convert File di Dolphin).</p></details>
-    <details><summary>Versi Wii: Dolphin Android memunculkan peringatan "Reg -1"?</summary><p>Itu bug JIT Dolphin Android, dan muncul juga di game asli tanpa patch. Tekan <b>Ignore for this session</b>, atau matikan Settings → Config → Interface → <b>Use Panic Handlers</b>.</p></details>
-    <details><summary>Nemu bug atau typo?</summary><p>Laporkan lewat <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/issues">GitHub Issues</a> dengan screenshot dan lokasi kejadian (mode, stage, menu). Daftar lengkap perubahan dan masalah yang diketahui ada di <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/blob/main/README_ID.txt">README_ID.txt</a>.</p></details>
-  </div>
-</section>
-
-<footer>
-  <div class="wrap">
-    <p>Penerjemah, teknis &amp; pengujian: <b>DeZer04</b> · <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id">Repositori GitHub</a></p>
-    <p>Patch buatan penggemar, bukan untuk dijual. Semua hak atas game, karakter, gambar dan musik milik CAPCOM.</p>
-  </div>
-</footer>
 </body>
 </html>
