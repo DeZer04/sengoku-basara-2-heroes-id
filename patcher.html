@@ -104,8 +104,8 @@ code { font-size: .88em; }
       <li>ISO yang dibutuhkan: <b>Sengoku Basara 2 - Heroes (Japan)</b> (SLPM-66848), 4.677.795.840 byte,
         satu file .iso. Kalau ISO-mu .chd/.cso/.7z, ubah atau ekstrak dulu ke .iso.</li>
       <li>Butuh ruang kosong ±4,7 GB untuk ISO baru. ISO asli tidak diubah.</li>
-      <li>Di Chrome/Edge desktop kamu memilih lokasi simpan dulu, lalu ISO baru ditulis langsung (cepat;
-        centang "Periksa ISO" kalau mau diverifikasi). Di HP/Android dan browser lain, ISO baru langsung diunduh
+      <li>Di Chrome/Edge desktop kamu memilih lokasi simpan dulu, lalu ISO baru ditulis langsung (cepat, tanpa
+        pemeriksaan). Di HP/Android dan browser lain, ISO baru langsung diunduh
         secara streaming (hemat memori, tidak macet di 1%); tunggu sampai unduhan selesai.</li>
       <li>Android: biarkan layar menyala dan jangan pindah aplikasi sampai selesai. Hasilnya bisa langsung dibuka
         di ARMSX2, AetherSX2 atau NetherSX2.</li>
@@ -129,7 +129,7 @@ const mb = n => Math.round(n / 1e6).toLocaleString('id-ID') + ' MB';
 function status(id, text, cls) { $(id).textContent = text; $(id).className = 'st ' + (cls || ''); }
 
 function refresh() {
-  if (iso && hdr) status('iso-st', '✓ ISO dipilih. Kecocokan diperiksa otomatis saat memproses.', 'ok');
+  if (iso && hdr) status('iso-st', '✓ ISO dipilih.', 'ok');
   $('go').disabled = busy || !CAN || !(iso && hdr);
 }
 
@@ -145,7 +145,7 @@ async function readPatchInfo(p) {
 $('mode').textContent = !CAN ? 'Browser ini terlalu lama. Pakai Chrome, Edge, Firefox atau Safari versi terbaru.'
   : FSA ? 'Mode: tulis langsung ke file (desktop).'
   : 'Mode: unduhan langsung streaming (hemat memori — cocok untuk HP/Android).';
-$('full-wrap').hidden = true;   // xdelta3 memverifikasi sumber sendiri; tak perlu opsi verifikasi terpisah
+$('full-wrap').hidden = true;   // tanpa pemeriksaan: patch langsung ditulis
 
 $('iso').addEventListener('change', e => {
   iso = e.target.files[0] || null;
@@ -216,7 +216,7 @@ async function swChannel(name, size) {
 
 // === xdelta engine (real xdelta3 compiled to WASM, kotcrab/xdelta-wasm, Apache-2.0) ===
 // Applies a standard .xdelta patch. The worker reads source + patch with FileReaderSync and posts output
-// chunks; we stream them into `sink`. Source matching is checksum-verified by xdelta3 itself.
+// chunks; we stream them into `sink`. No checks: xdelta3 runs with its checksum disabled and just writes.
 function applyXdelta(sink) {
   return new Promise((resolve, reject) => {
     let w;

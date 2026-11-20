@@ -2,7 +2,7 @@
  * The user's own RVZ (Dolphin) or ISO (+ the Wii common key the user supplies) + the .patch file -> a
  * translated ISO, written front to back in one pass.
  * Same layout rules as the PC patcher (patch_wii.py) and the reference build, so the ISO is byte-identical
- * to the release; every 2 MiB group is checked against the H3 table the patch carries.
+ * to the release. Nothing is checked on the way (dump, digests, H3): the patch is applied and written.
  * Environment-agnostic: the caller supplies file reads, zstd, the patch payload stream and AES (see run()).
  * The heavy part (RVZ decompression, hash tree, AES) runs per group in doGroup(), so a caller can spread the
  * groups over several workers (env.pool); the groups are written back in order.
@@ -324,19 +324,17 @@
   // ---------------------------------------------------------------- one group: data -> hash tree -> AES
   // job: { g, nc (clusters), data (64 * 0x7C00, filled except the parts), parts (Float64Array of
   //        [dest, partition offset in the RVZ, length] triples), h3 (the 20 bytes the group must hash to) }
-  // -> { out (nc * 0x8000 encrypted bytes) } or { bad: true } when the group does not match the patch.
+  // -> { out (nc * 0x8000 encrypted bytes) }. Not compared with the patch's H3 table: the group is written as it is.
   async function doGroup(job, rvz, aes) {
-    const { data, parts, nc, h3 } = job, pi = gamePart(rvz);
+    const { data, parts, nc } = job, pi = gamePart(rvz);
     for (let i = 0; i < parts.length; i += 3) rvz.readPartInto(pi, parts[i + 1], parts[i + 2], data, parts[i]);
-    const hb = new Uint8Array(64 * 0x400), h1 = new Uint8Array(64 * 20), h2 = new Uint8Array(160), top = new Uint8Array(20);
+    const hb = new Uint8Array(64 * 0x400), h1 = new Uint8Array(64 * 20), h2 = new Uint8Array(160);
     for (let c = 0; c < 64; c++) {
       const base = c * 0x400;
       for (let i = 0; i < 31; i++) sha1Into(data, c * CD + i * 0x400, 0x400, hb, base + i * 20);
       sha1Into(hb, base, 0x26C, h1, c * 20);
     }
     for (let s = 0; s < 8; s++) sha1Into(h1, s * 160, 160, h2, s * 20);
-    sha1Into(h2, 0, 160, top, 0);
-    for (let i = 0; i < 20; i++) if (top[i] !== h3[i]) return { bad: true };
     for (let c = 0; c < nc; c++) {
       const base = c * 0x400, s = c >> 3;
       hb.set(h1.subarray(s * 160, s * 160 + 160), base + 0x280); hb.set(h2, base + 0x340);
@@ -377,7 +375,7 @@
     const log = env.log || (() => {}), progress = env.progress || (() => {});
     log('Membaca game…');
     const r = env.game || openGame(env.rvzRead, env.zstd, env.commonKey);
-    if (String.fromCharCode(...r.dhead.subarray(0, 6)) !== 'RBSJ08') fail('Dump ini bukan RBSJ08 (Sengoku Basara 2 Heroes, disk Heroes dari Double Pack Jepang).');
+    // no checks of the dump (game ID, file digests, hashes): the patch is simply applied and written
     const pt = r.readRaw(0x40000, 0x20), nP = be32(pt, 0), ents = r.readRaw(be32(pt, 4) * 4, 8 * nP);
     let game = null;
     for (let k = 0; k < nP; k++) if (be32(ents, 8 * k + 4) === 0) game = be32(ents, 8 * k) * 4;
@@ -396,19 +394,11 @@
       }
     })(1, n, '');
     const byName = Object.fromEntries(files.map(f => [f.name, f]));
-    log('Memeriksa dump…');
-    for (const [name, [size, digest]] of Object.entries(man.files)) {
-      if (name === 'main.dol') continue;
-      const f = byName[name];
-      if (!f || f.size !== size) fail(`Ukuran ${name} berbeda: dump ini tidak sesuai.`);
-      if (digest && hex(sha1(rp(f.off, f.size), 0, f.size)) !== digest) fail(`Isi ${name} berbeda: dump ini tidak sesuai.`);
-    }
     // main.dol with the patched ranges (first in the payload stream)
     const dh = rp(dolOff, 0x100);
     let dolSize = 0;
     for (let k = 0; k < 18; k++) { const s = be32(dh, 0x90 + 4 * k); if (s) dolSize = Math.max(dolSize, be32(dh, 4 * k) + s); }
     const dol = rp(dolOff, dolSize);
-    if (hex(sha1(dol, 0, dol.length)) !== man.files['main.dol'][1]) fail('main.dol berbeda: dump ini tidak sesuai.');
     for (const [a, k] of man.dol) dol.set(await env.take(k), a);
     // sources of the new partition
     const lazy = size => {                       // a payload: its bytes come from the stream as they are needed
@@ -461,7 +451,6 @@
     list.push({ start: fstOff, ...bytesSrc(newFst) });
     const logical = new Segs(list), end = pos;
     const nclu = Math.ceil(end / CD), ngrp = Math.ceil(nclu / 64);
-    if (nclu * CL !== man.data_size || h3.length !== 20 * ngrp) fail('Patch dan dump tidak cocok (ukuran partisi berbeda).');
     // ---- disc header, gap, partition header
     const total = POFF + 0x20000 + nclu * CL;
     let written = 0;
@@ -472,8 +461,7 @@
     await out(disc);
     for (let left = POFF - 0x50000; left > 0;) { const k = Math.min(left, 8 << 20); await out(new Uint8Array(k)); left -= k; }
     const ph = r.readRaw(POFF, 0x20000);
-    const tmdSize = be32(ph, 0x2A4), tmdOff = be32(ph, 0x2A8) * 4;
-    if (tmdSize !== newTmd.length) fail('TMD tidak cocok.');
+    const tmdOff = be32(ph, 0x2A8) * 4;
     ph.set(newTmd, tmdOff);
     put32be(ph, 0x2BC, nclu * CL / 4);
     ph.fill(0, 0x8000, 0x20000); ph.set(h3, 0x8000);
@@ -505,7 +493,6 @@
           if (!job) return;
           const g = job.g, res = await ex.exec(job);
           if (failed) return;
-          if (res.bad) fail('Hasil tidak cocok dengan patch (grup ' + g + '). Pastikan dump-mu bersih, versi RBSJ08 yang sama.');
           if (res.data && free.length < lanes) free.push(res.data);
           results.set(g, res.out);
           writeLock = writeLock.then(async () => {

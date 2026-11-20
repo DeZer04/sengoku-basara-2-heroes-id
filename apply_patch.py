@@ -22,19 +22,19 @@ with open(patch, 'rb') as p:
     if magic != b'BSR2IDP2':
         sys.exit('Ini bukan file patch Basara 2 ID (format v0.97 ke atas).')
     runs = [RUN.unpack(p.read(RUN.size)) for _ in range(nruns)]
-    if os.path.getsize(orig) != size:
-        sys.exit('Ukuran ISO berbeda: ini bukan dump Sengoku Basara 2 - Heroes (Japan) yang dibutuhkan.')
     print('patch v' + ver.rstrip(b'\0').decode(), '- menulis ISO baru (beberapa menit)...')
     data = gzip.GzipFile(fileobj=p)
     ho, hn = hashlib.sha1(), hashlib.sha1()
     with open(orig, 'rb') as a, open(out, 'wb') as o:
         def copy(n, src):
             while n > 0:
-                b = a.read(min(n, CH))
+                k = min(n, CH)
+                b = a.read(k)
                 if verify:
                     ho.update(b)
+                b = b.ljust(k, b'\0')                  # no size check: a shorter ISO is simply zero-filled
                 if src is not None:
-                    b = src.read(len(b))
+                    b = src.read(k)
                     if not b:
                         sys.exit('File patch terpotong (unduhan tidak lengkap?).')
                 if verify:

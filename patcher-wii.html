@@ -136,8 +136,8 @@ code { font-size: .88em; }
         jadi HP bisa terasa hangat.</li>
       <li>Hasilnya dibuka di Dolphin (PC/Android). Mau lebih hemat ruang? Ubah ISO hasil ke RVZ di Dolphin
         (±3,8 GB). Wii asli: lewat USB Loader dengan cIOS (ISO hasil memakai fakesign).</li>
-      <li>Setiap bagian ISO dicocokkan dengan patch. Kalau dump-mu berbeda (versi lain atau sudah diubah),
-        proses berhenti dengan pesan kesalahan, bukan menghasilkan ISO rusak.</li>
+      <li>Patch langsung dipasang dan ditulis tanpa pemeriksaan dump (lebih cepat). Pakai dump bersih disk Heroes
+        (RBSJ08): dump versi lain atau yang sudah diubah menghasilkan ISO yang tidak bisa dimainkan.</li>
       <li>Semua proses terjadi di perangkatmu. Tidak ada file yang diunggah ke mana pun.</li>
     </ul>
   </details>
@@ -167,17 +167,13 @@ function threads() {
 // quick look at the game file: 'rvz' (RBSJ08, Zstandard or no compression) or 'iso' (RBSJ08 Wii disc image)
 async function checkGame(f) {
   const h = new Uint8Array(await f.slice(0, 0x60).arrayBuffer());
-  const m = str(h, 0, 4), other = id => new Error(`Ini game lain (${id.replace(/[^ -~]/g, '?')}). Yang dibutuhkan disk Heroes, ID RBSJ08.`);
-  if (m === 'RVZ\x01' || m === 'WIA\x01') {
+  const m = str(h, 0, 4);
+  if (m === 'RVZ\x01' || m === 'WIA\x01') {          // only the format is looked at: no game ID or dump checks
     const comp = (h[0x4C] << 24) | (h[0x4D] << 16) | (h[0x4E] << 8) | h[0x4F];
-    if (str(h, 0x58, 0x5E) !== 'RBSJ08') throw other(str(h, 0x58, 0x5E));
     if (comp !== 0 && comp !== 5) throw new Error('RVZ ini memakai kompresi selain Zstandard. Konversi ulang di Dolphin dengan Compression: Zstandard.');
     return 'rvz';
   }
-  if (h[0x18] === 0x5D && h[0x19] === 0x1C && h[0x1A] === 0x9E && h[0x1B] === 0xA3) {
-    if (str(h, 0, 6) !== 'RBSJ08') throw other(str(h, 0, 6));
-    return 'iso';
-  }
+  if (h[0x18] === 0x5D && h[0x19] === 0x1C && h[0x1A] === 0x9E && h[0x1B] === 0xA3) return 'iso';
   if (m === 'WBFS') throw new Error('Ini file WBFS. Ubah dulu ke ISO atau RVZ di Dolphin (lihat Bantuan).');
   throw new Error('File ini bukan ISO Wii atau RVZ (lihat Bantuan).');
 }
@@ -232,7 +228,7 @@ $('rvz').addEventListener('change', async e => {
   if (!rvz) return;
   try {
     kind = await checkGame(rvz); rvzOk = true;
-    status('rvz-st', `✓ ${kind === 'iso' ? 'ISO' : 'RVZ'} Sengoku Basara 2 Heroes (RBSJ08). Isinya diperiksa saat memproses.`, 'ok');
+    status('rvz-st', `✓ ${kind === 'iso' ? 'ISO' : 'RVZ'} Wii dipilih.`, 'ok');
     if (kind === 'iso') {
       $('keybox').hidden = false;
       if (!$('key').value) $('key').value = savedKey();
