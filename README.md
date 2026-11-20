@@ -1,7 +1,7 @@
 # Sengoku Basara 2 Heroes — Terjemahan Bahasa Indonesia
 
-Patch terjemahan penggemar untuk **Sengoku Basara 2 Heroes** (PlayStation 2, Jepang, SLPM-66848).
-Patched by **DeZer04**.
+Patch terjemahan penggemar untuk **Sengoku Basara 2 Heroes** (PlayStation 2, Jepang, SLPM-66848), sekarang juga
+untuk **Wii** (RBSJ08, lihat [Versi Wii](#versi-wii)). Patched by **DeZer04**.
 
 **Halaman unduh & patcher online: https://dezer04.github.io/sengoku-basara-2-heroes-id/**
 
@@ -46,6 +46,22 @@ Checksum ISO hasil patch ada di [`checksums.txt`](checksums.txt).
 
 Mainkan ISO hasil patch di PCSX2, ARMSX2 / AetherSX2 / NetherSX2, atau PS2 asli lewat OPL. Save memory card versi
 Jepang tetap bisa dipakai.
+
+## Versi Wii
+
+Terjemahan yang sama untuk disk **Heroes** dari *Sengoku Basara 2 Heroes Double Pack* (Wii, Jepang, ID `RBSJ08`).
+File ada di rilis **[wii-v0.99](../../releases/tag/wii-v0.99)**: `basara2_wii_id_v0.99.patch`, `patch_wii.py` dan
+`CARA_PATCH_WII.txt`.
+
+1. Ubah game milikmu ke **RVZ** di Dolphin: *Convert File*, Format RVZ, Compression Zstandard. Isi disk Wii
+   terenkripsi, dan membaca ISO/WBFS langsung butuh kunci Nintendo yang sengaja tidak disertakan.
+2. Pasang patch lewat [`patcher-wii.html`](patcher-wii.html) di Chrome/Edge (PC atau HP Android), atau
+   `python patch_wii.py "game.rvz" "hasil.iso" basara2_wii_id_v0.99.patch`.
+3. Mainkan ISO hasil di Dolphin (PC/Android), atau di Wii asli lewat USB Loader GX / WiiFlow dengan cIOS.
+
+Hasil patch: ISO 4.454.055.936 byte, SHA-1 `725DF73E8C93CFB8D5C97A15E1FFA229E402D9A5`. Dolphin Android kadang memunculkan peringatan
+"Reg -1"; itu bug JIT Dolphin yang juga muncul di game asli. Tekan *Ignore for this session* atau matikan
+*Use Panic Handlers*.
 
 ## Yang sudah diterjemahkan
 
