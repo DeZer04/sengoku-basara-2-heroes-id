@@ -135,4 +135,15 @@ footer p { margin: 0 0 8px; }
   .dl-row { grid-template-columns: minmax(0, 1fr); }
   .dl-links { justify-content: flex-start; }
 }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .pcard, .pcard .cover img, .pcard .enter svg { transition: none; } }
+/* floating Saweria (dukungan) button */
+.saweria-fab { position: fixed; right: 18px; bottom: max(18px, env(safe-area-inset-bottom, 0px)); z-index: 60;
+  display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+  background: var(--gold); color: #1a1208; font: 800 15px/1 var(--body); letter-spacing: .01em;
+  padding: 13px 18px; border-radius: 999px; border: 2px solid rgba(0,0,0,.2);
+  box-shadow: 0 10px 30px rgba(0,0,0,.5); transition: transform .16s ease, box-shadow .16s ease, filter .16s ease; }
+.saweria-fab:hover { transform: translateY(-3px); filter: brightness(1.05); box-shadow: 0 16px 42px rgba(0,0,0,.6); }
+.saweria-fab:focus-visible { outline: 3px solid var(--text); outline-offset: 3px; }
+.saweria-fab svg { width: 18px; height: 18px; }
+@media (max-width: 520px) { .saweria-fab { right: 12px; padding: 12px 15px; font-size: 14px; } }
+
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .pcard, .pcard .cover img, .pcard .enter svg, .saweria-fab { transition: none; } }
