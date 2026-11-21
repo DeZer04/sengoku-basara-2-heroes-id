@@ -43,16 +43,6 @@ header p { margin: 4px 0 0; color: var(--muted); }
 .file { margin-top: 8px; font-size: .9rem; color: var(--muted); word-break: break-all; }
 .st { margin-top: 6px; font-size: .92rem; }
 .hint { margin: 10px 0 0; font-size: .88rem; color: var(--muted); }
-.keybox { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
-.keybox label { display: block; font-weight: 600; font-size: .92rem; margin-bottom: 6px; }
-.keybox input { width: 100%; font: 15px ui-monospace, Consolas, monospace; padding: 10px 12px; border: 1px solid var(--line);
-                border-radius: 8px; background: var(--bg); color: var(--fg); }
-.keybox input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
-.keycopy { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .88rem; color: var(--muted); }
-.keycopy code { user-select: all; background: var(--bg); border: 1px solid var(--line); padding: 4px 8px; border-radius: 6px;
-                color: var(--fg); word-break: break-all; }
-.keycopy button { border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 6px; padding: 5px 10px;
-                  font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; }
 .hint a { color: inherit; }
 .st.ok { color: var(--ok); } .st.bad { color: var(--bad); }
 button#go { width: 100%; border: 0; border-radius: 10px; padding: 14px; font: inherit; font-weight: 700; font-size: 1.05rem;
@@ -89,16 +79,6 @@ code { font-size: .88em; }
     <label class="pick">Pilih file .iso / .rvz<input type="file" id="rvz"></label>
     <div class="file" id="rvz-name"></div>
     <div class="st" id="rvz-st"></div>
-    <div class="keybox" id="keybox" hidden>
-      <label for="key">Common key Wii <span class="tag">khusus ISO</span></label>
-      <input id="key" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
-             placeholder="Tempel common key Wii di sini (32 karakter hex)">
-      <div class="st" id="key-st"></div>
-      <div class="keycopy"><span>Common key Wii:</span> <code id="ck">ebe42a225e8593e448d9c5457381aaf7</code>
-        <button type="button" id="ckuse">Salin &amp; pakai</button></div>
-      <p class="hint">Tekan <b>Salin &amp; pakai</b>, atau salin kunci di atas lalu tempel di kolom. Kunci hanya disimpan di
-        browser ini dan tidak dikirim ke mana pun. File RVZ tidak butuh kunci.</p>
-    </div>
   </section>
 
   <section class="step">
@@ -123,9 +103,7 @@ code { font-size: .88em; }
     <ul>
       <li>Game yang dibutuhkan: disk <b>Heroes</b> dari <b>Sengoku Basara 2 Heroes Double Pack</b> versi Jepang
         (ID game <code>RBSJ08</code>), dump dari disk milikmu sendiri, dalam format <b>ISO</b> atau <b>RVZ</b>.</li>
-      <li><b>ISO</b>: isi disk Wii terenkripsi, jadi patcher butuh <b>common key Wii</b>. Setelah memilih ISO, tekan
-        <b>Salin &amp; pakai</b> di kolom kunci yang muncul (cukup sekali, disimpan di browser ini).
-        <b>RVZ</b> tidak butuh kunci.</li>
+      <li><b>ISO</b> dan <b>RVZ</b> sama-sama langsung bisa dipakai, tanpa kunci atau pengaturan apa pun.</li>
       <li>Punya WBFS? Ubah dulu ke ISO atau RVZ di Dolphin. Di PC: klik kanan game &rarr;
         <i>Convert File…</i>. Di Android: tekan lama game di daftar &rarr; <i>Convert File</i>. Pilih Format <b>RVZ</b>,
         Compression <b>Zstandard</b> (bawaan), lalu Convert. File aslimu tidak diubah.</li>
@@ -180,32 +158,21 @@ async function checkGame(f) {
   throw new Error('File ini bukan ISO Wii atau RVZ (lihat Bantuan).');
 }
 
-// the Wii common key for ISO input: pasted by the user, kept only in this browser
-const KEYSTORE = 'bsr2wii.commonkey';
-function savedKey() { try { return localStorage.getItem(KEYSTORE) || ''; } catch (_) { return ''; } }
-function storeKey(s) { try { localStorage.setItem(KEYSTORE, s); } catch (_) {} }
-let keyRun = 0, keyT = 0;
+// the Wii common key: ISO input is decrypted with it, built in (as in Dolphin), so ISO works like RVZ
+const COMMON_KEY = 'ebe42a225e8593e448d9c5457381aaf7';
+let keyRun = 0;
 async function checkKey() {
-  const my = ++keyRun, s = $('key').value.trim();
+  const my = ++keyRun;
   keyOk = false; refresh();
   if (kind !== 'iso') return;
-  if (!s) { status('key-st', 'Tempel common key Wii untuk memakai ISO.'); return; }
-  const k = WiiPatch.parseKey(s);
-  if (!k) { status('key-st', '✗ Format kunci: 32 karakter hex (0-9, a-f).', 'bad'); return; }
-  status('key-st', 'Memeriksa kunci…');
+  status('rvz-st', 'Memeriksa ISO…');
   try {
-    await WiiPatch.isoKeyCheck(async (o, n) => new Uint8Array(await rvz.slice(o, o + n).arrayBuffer()), k);
+    await WiiPatch.isoKeyCheck(async (o, n) => new Uint8Array(await rvz.slice(o, o + n).arrayBuffer()), WiiPatch.parseKey(COMMON_KEY));
     if (my !== keyRun) return;
-    keyOk = true; storeKey(s); status('key-st', '✓ Kunci cocok: ISO bisa dibaca.', 'ok');
-  } catch (err) { if (my === keyRun) status('key-st', '✗ ' + (err && err.message || err), 'bad'); }
+    keyOk = true; status('rvz-st', '✓ ISO Wii dipilih.', 'ok');
+  } catch (err) { if (my === keyRun) status('rvz-st', '✗ ' + (err && err.message || err), 'bad'); }
   refresh();
 }
-$('key').addEventListener('input', () => { clearTimeout(keyT); keyT = setTimeout(checkKey, 250); });
-$('ckuse').addEventListener('click', async () => {
-  const k = $('ck').textContent.trim();
-  try { await navigator.clipboard.writeText(k); } catch (_) {}
-  $('key').value = k; checkKey();
-});
 
 async function readPatchInfo(p) {
   const h = new Uint8Array(await p.slice(0, 12).arrayBuffer());
@@ -225,17 +192,13 @@ $('mode').textContent = !CAN ? 'Browser ini tidak didukung. Pakai Chrome, Edge a
 $('rvz').addEventListener('change', async e => {
   rvz = e.target.files[0] || null; rvzOk = false; kind = ''; keyOk = false;
   $('rvz-name').textContent = rvz ? `${rvz.name} · ${gb(rvz.size)}` : '';
-  status('rvz-st', ''); $('keybox').hidden = true;
+  status('rvz-st', '');
   refresh();
   if (!rvz) return;
   try {
     kind = await checkGame(rvz); rvzOk = true;
-    status('rvz-st', `✓ ${kind === 'iso' ? 'ISO' : 'RVZ'} Wii dipilih.`, 'ok');
-    if (kind === 'iso') {
-      $('keybox').hidden = false;
-      if (!$('key').value) $('key').value = savedKey();
-      checkKey();
-    }
+    if (kind === 'iso') await checkKey();
+    else status('rvz-st', '✓ RVZ Wii dipilih.', 'ok');
   } catch (err) { status('rvz-st', '✗ ' + err.message, 'bad'); }
   refresh();
 });
@@ -341,7 +304,7 @@ function runPatch(sink) {
       else if (d.type === 'error') fail(new Error(d.message));
       else if (d.type === 'done') { done = true; chain.then(() => { w.terminate(); return sink.close(); }).then(resolve, reject); }
     };
-    w.postMessage({ type: 'start', game: rvz, key: kind === 'iso' ? $('key').value : null, patch, threads: threads() });
+    w.postMessage({ type: 'start', game: rvz, key: kind === 'iso' ? COMMON_KEY : null, patch, threads: threads() });
   });
 }
 
