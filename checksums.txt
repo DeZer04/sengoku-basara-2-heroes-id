@@ -4,9 +4,9 @@ ISO Full Indo + koban x10 SAFE v0.99.1 (loose)	size=4677795840	crc32=ad655142	md
 ISO Deskripsi item saja v0.99.1 (loose)	size=4677795840	crc32=d000b937	md5=7f8cbc8d1cc2e1bd00bc31288696786d	sha1=050ab84e49a9a937245fac045859ec6817715a4d
 OPL CHD Full Indo v0.99.1 (tight)	size=3634273362	crc32=1d0403b6	md5=fc0e800f458858db1fb5cc79673705a6	sha1=725a581444c3da3de75f28c7f2ed374fdd9f4075
 OPL CHD Koban x10 SAFE v0.99.1 (tight)	size=3634273329	crc32=a9aeb3af	md5=1c511fc06725c5b597d7a37119fbc847	sha1=7b60165ad999f051aab7145c7466ae4b3d86c230
-basara2_id_v0.99.1.xdelta	size=539876162	crc32=63d706f7	md5=015fca98614ad67ca13fe1c565b2397d	sha1=2787eed3a31e2e3af26a4a96270826413a734a19
-basara2_id_v0.99.1_koban10_safe.xdelta	size=539876228	crc32=4ecd7a12	md5=61fed01fca3870b80ff83cdac15a3aea	sha1=d355b487e4eb484aa64ae6605836038f566a8092
-basara2_id_v0.99.1_deskripsi_item.xdelta	size=195138	crc32=c50e0808	md5=6ad860e27536211eb6e36ded333481c3	sha1=4e3e8b2eae3b42302dc0e99a7cabdd6a0a396bd8
+basara2_id_v0.99.1.xdelta	size=518782145	crc32=d21e18f1	md5=9470f2b9032170499a57a8bcc0499011	sha1=0801812ff494a460779677e9a4a04536e690c566
+basara2_id_v0.99.1_koban10_safe.xdelta	size=518782177	crc32=b486d8dc	md5=0aaa563bc685459669a31de81520b94d	sha1=d836e3eecd7fe72da7aca9bde294ba19dcf3cfaa
+basara2_id_v0.99.1_deskripsi_item.xdelta	size=216626	crc32=94a8997c	md5=4cb0c6ac07397f0b6b851c8d4e353c1c	sha1=b5b2b58a9b729fa3d9c905049ffe5ff5a77ae6b9
 basara2_id_v0.99_to_v0.99.1.xdelta	size=30763	crc32=6ee4187a	md5=031f0250de014ab33eb0ddd8cd9a01a0	sha1=ff62d15539447a56880957ee03a241cfab730960
 basara2_id_v0.99koban_to_v0.99.1koban.xdelta	size=30763	crc32=0df107e0	md5=b0a26d7e4cd643fc72552c91a888a6b8	sha1=6264e58a3300fa6559bbb993f19efb07453bb90e
 basara2_id_v0.99_to_v0.99.1_deskripsi_item.xdelta	size=21652	crc32=d406fa18	md5=d27b2a8c31bd2d965f8b8c6dfbe36c1d	sha1=d27cb7e0f97dc467924a760cc4bf1247353b275c

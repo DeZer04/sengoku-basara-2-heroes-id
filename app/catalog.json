@@ -1,0 +1,246 @@
+{
+  "format": 1,
+  "update": "https://dezer04.github.io/sengoku-basara-2-heroes-id/app/catalog.json",
+  "app": {
+    "repo": "DeZer04/sengoku-basara-2-heroes-id",
+    "tag": "app-v"
+  },
+  "games": [
+    {
+      "id": "sbh2",
+      "title": "Sengoku Basara 2 Heroes",
+      "subtitle": "Terjemahan Bahasa Indonesia",
+      "credit": "DeZer04",
+      "accent": "#D71920",
+      "repo": "DeZer04/sengoku-basara-2-heroes-id",
+      "site": "https://dezer04.github.io/sengoku-basara-2-heroes-id/",
+      "platforms": [
+        {
+          "id": "ps2",
+          "name": "PlayStation 2",
+          "short": "PS2",
+          "tag": "v",
+          "engine": "xdelta",
+          "sourceSize": 4677795840,
+          "checksums": "checksums.txt",
+          "variants": [
+            {
+              "id": "full",
+              "label": "Terjemahan lengkap",
+              "about": "Menu, cerita, skill, item, dan video berteks Bahasa Indonesia.",
+              "badge": "Disarankan",
+              "full": "basara2_id_v{v}.xdelta",
+              "fullSource": "ISO Jepang asli, atau ISO Indonesia versi mana pun (sekaligus memperbaiki ISO yang bermasalah)",
+              "updater": "basara2_id_v(.+)_to_v{v}\\.xdelta",
+              "expect": "MAIN ISO Full Indo",
+              "out": "Sengoku Basara 2 - Heroes (Japan) (Indonesia v{v}).iso"
+            },
+            {
+              "id": "koban",
+              "label": "Terjemahan + Koban x10",
+              "about": "Terjemahan lengkap, ditambah koban (uang) hasil pertempuran 10x lipat. Versi aman untuk PS2 asli.",
+              "full": "basara2_id_v{v}_koban10_safe.xdelta",
+              "fullSource": "ISO Jepang asli, atau ISO Indonesia versi mana pun (sekaligus memperbaiki ISO yang bermasalah)",
+              "updater": "basara2_id_v(.+)koban_to_v{v}koban\\.xdelta",
+              "expect": "ISO Full Indo + koban",
+              "out": "Sengoku Basara 2 - Heroes (Japan) (Indonesia v{v}) + Kobanx10.iso"
+            },
+            {
+              "id": "desc",
+              "label": "Hanya deskripsi item",
+              "about": "Game tetap berbahasa Jepang; hanya keterangan item yang diterjemahkan.",
+              "full": "basara2_id_v{v}_deskripsi_item.xdelta",
+              "fullSource": "ISO Jepang asli (belum pernah dipatch)",
+              "updater": "basara2_id_v(.+)_to_v{v}_deskripsi_item\\.xdelta",
+              "expect": "ISO Deskripsi item",
+              "out": "Sengoku Basara 2 - Heroes (Japan) (Indonesia v{v}) - Translate Description.iso",
+              "accepts": [
+                "jp",
+                "desc"
+              ]
+            }
+          ],
+          "identify": {
+            "probes": [
+              4433027072,
+              4662278144
+            ],
+            "known": [
+              {
+                "id": "jp",
+                "label": "ISO Jepang asli",
+                "family": "jp",
+                "version": null,
+                "sha1": [
+                  "db6f9a544c0aba93",
+                  "86c17b3372faade7"
+                ]
+              },
+              {
+                "id": "v0.97",
+                "label": "ISO Indonesia v0.97",
+                "family": "full",
+                "version": "0.97",
+                "sha1": [
+                  "331ea993cdc29582",
+                  "86c17b3372faade7"
+                ]
+              },
+              {
+                "id": "v0.98",
+                "label": "ISO Indonesia v0.98",
+                "family": "full",
+                "version": "0.98",
+                "sha1": [
+                  "2420d94613a054f6",
+                  "86c17b3372faade7"
+                ]
+              },
+              {
+                "id": "v0.98-k",
+                "label": "ISO Indonesia v0.98 + Koban x10",
+                "family": "koban",
+                "version": "0.98",
+                "sha1": [
+                  "2420d94613a054f6",
+                  "1b342c78210d0a52"
+                ]
+              },
+              {
+                "id": "v0.98-ks",
+                "label": "ISO Indonesia v0.98 + Koban x10 SAFE",
+                "family": "koban-safe",
+                "version": "0.98",
+                "sha1": [
+                  "2420d94613a054f6",
+                  "b93ccee58bc4945c"
+                ]
+              },
+              {
+                "id": "v0.99",
+                "label": "ISO Indonesia v0.99",
+                "family": "full",
+                "version": "0.99",
+                "sha1": [
+                  "d4c89dafdf0d719f",
+                  "86c17b3372faade7"
+                ]
+              },
+              {
+                "id": "v0.99-k",
+                "label": "ISO Indonesia v0.99 + Koban x10",
+                "family": "koban",
+                "version": "0.99",
+                "sha1": [
+                  "d4c89dafdf0d719f",
+                  "b93ccee58bc4945c"
+                ]
+              },
+              {
+                "id": "v0.99-d",
+                "label": "ISO Indonesia v0.99 deskripsi item",
+                "family": "desc",
+                "version": "0.99",
+                "sha1": [
+                  "681371818f193ea3",
+                  "86c17b3372faade7"
+                ]
+              },
+              {
+                "id": "v0.99-t",
+                "label": "ISO Indonesia v0.99 dari CHD (OPL)",
+                "family": "full-chd",
+                "version": "0.99",
+                "sha1": [
+                  "0cb5ede3050e38be",
+                  "86c17b3372faade7"
+                ]
+              },
+              {
+                "id": "v0.99-kt",
+                "label": "ISO Indonesia v0.99 + Koban x10 dari CHD (OPL)",
+                "family": "koban-chd",
+                "version": "0.99",
+                "sha1": [
+                  "0cb5ede3050e38be",
+                  "b93ccee58bc4945c"
+                ]
+              },
+              {
+                "id": "v0.99.1",
+                "label": "ISO Indonesia v0.99.1",
+                "family": "full",
+                "version": "0.99.1",
+                "sha1": [
+                  "970e9f7a4f91f63b",
+                  "86c17b3372faade7"
+                ]
+              },
+              {
+                "id": "v0.99.1-k",
+                "label": "ISO Indonesia v0.99.1 + Koban x10",
+                "family": "koban",
+                "version": "0.99.1",
+                "sha1": [
+                  "970e9f7a4f91f63b",
+                  "b93ccee58bc4945c"
+                ]
+              },
+              {
+                "id": "v0.99.1-d",
+                "label": "ISO Indonesia v0.99.1 deskripsi item",
+                "family": "desc",
+                "version": "0.99.1",
+                "sha1": [
+                  "e0cfae58179b1124",
+                  "86c17b3372faade7"
+                ]
+              },
+              {
+                "id": "v0.99.1-t",
+                "label": "ISO Indonesia v0.99.1 dari CHD (OPL)",
+                "family": "full-chd",
+                "version": "0.99.1",
+                "sha1": [
+                  "6e591b3cf2f6362e",
+                  "86c17b3372faade7"
+                ]
+              },
+              {
+                "id": "v0.99.1-kt",
+                "label": "ISO Indonesia v0.99.1 + Koban x10 dari CHD (OPL)",
+                "family": "koban-chd",
+                "version": "0.99.1",
+                "sha1": [
+                  "6e591b3cf2f6362e",
+                  "b93ccee58bc4945c"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "wii",
+          "name": "Wii",
+          "short": "Wii",
+          "tag": "wii-v",
+          "engine": "wii",
+          "updaterRejects": [
+            ".rvz"
+          ],
+          "variants": [
+            {
+              "id": "full",
+              "label": "Terjemahan lengkap",
+              "about": "Disk Heroes dari Double Pack (RBSJ08). Hasilnya ISO di bawah 4 GB untuk Dolphin, B2HWii, dan kartu SD FAT32.",
+              "full": "basara2_wii_id_v{v}.patch",
+              "fullSource": "dump asli (RVZ dari Dolphin atau ISO), atau ISO Wii Indonesia versi mana pun (sekaligus memperbaikinya)",
+              "updater": "basara2_wii_id_v(.+)_to_v{v}\\.patch",
+              "out": "Sengoku Basara 2 Heroes (Wii) [Indonesia v{v}].iso"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

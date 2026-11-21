@@ -49,7 +49,10 @@ Deskripsi item saja    SHA-1 : 050AB84E49A9A937245FAC045859EC6817715A4D
 
 ------------------------------------------------------------------
 PILIH PATCH (semua format .xdelta - lihat CARA MEMASANG)
-Diterapkan ke ISO Jepang ASLI (CRC32 23716FDA):
+Patch penuh (Full Indo / koban) diterapkan ke ISO Jepang ASLI (CRC32 23716FDA)
+ATAU ke ISO Indonesia versi lama mana pun (v0.97, v0.98, v0.99, termasuk hasil
+ekstrak CHD): hasilnya sama persis, jadi patch penuh juga untuk MEMPERBAIKI ISO
+yang bermasalah. Patch deskripsi item tetap butuh ISO Jepang asli.
 - basara2_id_v0.99.1 .................. Full Indo (disarankan).
 - basara2_id_v0.99.1_koban10_safe .... Full Indo + koban (uang) x10, versi AMAN:
   tiap koban dikali 10 lalu dibatasi 999.999 agar tidak membekukan PS2 asli.

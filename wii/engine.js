@@ -386,7 +386,9 @@
     const pt = r.readRaw(0x40000, 0x20), nP = be32(pt, 0), ents = r.readRaw(be32(pt, 4) * 4, 8 * nP);
     let game = null;
     for (let k = 0; k < nP; k++) if (be32(ents, 8 * k + 4) === 0) game = be32(ents, 8 * k) * 4;
-    if (game !== POFF) fail('Tata letak partisi tidak dikenal.');
+    // any layout: the original disc (0xF800000) or an ISO of this patch (v0.99.1+: 0x50000), so the full patch also
+    // repairs or re-patches an earlier Indonesian ISO
+    if (game === null) fail('Partisi game tidak ditemukan: dump ini tidak sesuai.');
     const gi = gamePart(r), rp = (o, n) => r.readPart(gi, o, n);
     const boot = rp(0, 0x440);
     const dolOff = be32(boot, 0x420) * 4, fstOff = be32(boot, 0x424) * 4, fstSize = be32(boot, 0x428) * 4;
@@ -474,7 +476,7 @@
     put32be(disc, 0x40000, 1); put32be(disc, 0x40004, 0x40020 / 4); put32be(disc, 0x40020, opoff / 4);
     await out(disc);
     for (let left = opoff - 0x50000; left > 0;) { const k = Math.min(left, 8 << 20); await out(new Uint8Array(k)); left -= k; }
-    const ph = r.readRaw(POFF, 0x20000);
+    const ph = r.readRaw(game, 0x20000);
     const tmdOff = be32(ph, 0x2A8) * 4;
     ph.set(newTmd, tmdOff);
     put32be(ph, 0x2BC, nclu * CL / 4);

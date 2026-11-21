@@ -42,9 +42,13 @@ Checksum ISO hasil patch ada di [`checksums.txt`](checksums.txt).
 ## Cara memasang
 
 1. **patcher.html** (Windows, macOS, Linux, Android): buka [`patcher.html`](patcher.html) di Chrome/Edge (atau
-   Firefox/Safari), pilih ISO asli dan file `.xdelta`, lalu klik *Patch sekarang*. Semua proses berjalan di perangkatmu;
+   Firefox/Safari), pilih ISO-mu dan file `.xdelta`, lalu klik *Patch sekarang*. Semua proses berjalan di perangkatmu;
    tidak ada file yang diunggah.
-2. **xdelta**: `xdelta3 -d -s "ISO asli.iso" basara2_id_v0.99.1.xdelta "ISO hasil.iso"`
+2. **xdelta**: `xdelta3 -d -s "ISO-mu.iso" basara2_id_v0.99.1.xdelta "ISO hasil.iso"`
+
+Patch penuh (terjemahan / koban) bisa dipasang ke ISO Jepang asli **maupun ISO Indonesia versi lama mana pun**
+(v0.97, v0.98, v0.99, termasuk ISO hasil ekstrak CHD/OPL): hasilnya sama persis. Jadi patch penuh sekaligus untuk
+memperbaiki ISO yang bermasalah. Patch deskripsi item tetap butuh ISO Jepang asli.
 
 Mainkan ISO hasil patch di PCSX2, ARMSX2 / AetherSX2 / NetherSX2, atau PS2 asli lewat OPL. Save memory card versi
 Jepang tetap bisa dipakai.
@@ -54,7 +58,8 @@ Jepang tetap bisa dipakai.
 Terjemahan yang sama untuk disk **Heroes** dari *Sengoku Basara 2 Heroes Double Pack* (Wii, Jepang, ID `RBSJ08`).
 File ada di rilis **[wii-v0.99.1](../../releases/tag/wii-v0.99.1)**: `basara2_wii_id_v0.99.1.patch`, `patch_wii.py` dan
 `CARA_PATCH_WII.txt`. Sudah punya ISO Wii v0.99 hasil patch? Cukup updater `basara2_wii_id_v0.99_to_v0.99.1.patch`
-(442 KB), dipasang ke ISO v0.99 itu; hasilnya sama persis dengan patch penuh.
+(442 KB), dipasang ke ISO v0.99 itu; hasilnya sama persis dengan patch penuh. Patch penuh juga bisa dipasang ke ISO
+Wii Indonesia versi mana pun (sekaligus memperbaikinya), selama file ISO-nya utuh.
 
 1. Siapkan game milikmu sebagai **ISO** atau **RVZ** (keduanya langsung bisa, tanpa kunci). WBFS
    diubah dulu di Dolphin: *Convert File*, Format RVZ, Compression Zstandard.

@@ -77,7 +77,8 @@ code { font-size: .88em; }
   </header>
 
   <section class="step">
-    <h2><span class="num">1</span>ISO asli (Jepang)</h2>
+    <h2><span class="num">1</span>ISO kamu</h2>
+    <p class="mode" style="margin:0 0 10px">ISO Jepang asli, atau ISO Indonesia versi mana pun: patch penuh menimpa versi lama sekaligus memperbaiki ISO yang bermasalah.</p>
     <label class="pick">Pilih file ISO<input type="file" id="iso"></label>
     <div class="file" id="iso-name"></div>
     <div class="st" id="iso-st"></div>
@@ -89,6 +90,7 @@ code { font-size: .88em; }
     <label class="pick">Pilih file .xdelta<input type="file" id="patch" accept=".xdelta"></label>
     <div class="file" id="patch-name"></div>
     <div class="st" id="patch-st"></div>
+    <div class="fix" id="pair" hidden></div>
   </section>
 
   <section class="step">
@@ -97,7 +99,7 @@ code { font-size: .88em; }
     <label class="opt" id="full-wrap" hidden><input type="checkbox" id="full"> Periksa ISO (lebih aman, tapi lebih lama).
       Tanpa dicentang, patch langsung dipasang tanpa verifikasi — lebih cepat.</label>
     <div class="bar"><div id="bar"></div></div>
-    <div id="stage"><span id="stage-t">Pilih ISO asli dan file patch.</span><span id="stage-p"></span></div>
+    <div id="stage"><span id="stage-t">Pilih ISO dan file patch.</span><span id="stage-p"></span></div>
     <div id="msg"></div>
     <div class="mode" id="mode"></div>
   </section>
@@ -107,6 +109,9 @@ code { font-size: .88em; }
     <ul>
       <li>ISO yang dibutuhkan: <b>Sengoku Basara 2 - Heroes (Japan)</b> (SLPM-66848), 4.677.795.840 byte,
         satu file .iso. Kalau ISO-mu .chd/.cso/.7z, ubah atau ekstrak dulu ke .iso.</li>
+      <li>Patch penuh (terjemahan lengkap / koban) bisa dipasang ke ISO Jepang asli <b>maupun</b> ISO Indonesia versi
+        lama mana pun (v0.97, v0.98, v0.99, termasuk hasil CHD/OPL), dan hasilnya selalu sama persis. Jadi patch penuh juga
+        bisa dipakai untuk memperbaiki ISO yang bermasalah. Patch deskripsi item tetap butuh ISO Jepang asli.</li>
       <li>Butuh ruang kosong ±4,7 GB untuk ISO baru. ISO asli tidak diubah.</li>
       <li>Di Chrome/Edge desktop kamu memilih lokasi simpan dulu, lalu ISO baru ditulis langsung (cepat, tanpa
         pemeriksaan). Di HP/Android dan browser lain, ISO baru langsung diunduh
@@ -136,6 +141,7 @@ function status(id, text, cls) { $(id).textContent = text; $(id).className = 'st
 // smaller file was cut short (unfinished download or copy, FAT32 card) and would patch into a broken ISO
 const ISO_SIZE = 4677795840;
 const FULL_PATCH = 'https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/download/v0.99.1/basara2_id_v0.99.1.xdelta';
+const FULL_KOBAN = FULL_PATCH.replace('.xdelta', '_koban10_safe.xdelta'), FULL_DESC = FULL_PATCH.replace('.xdelta', '_deskripsi_item.xdelta');
 const nb = n => n.toLocaleString('id-ID');
 function isoProblem() {
   if (!iso || iso.size === ISO_SIZE) return '';
@@ -144,15 +150,57 @@ function isoProblem() {
     : `Ukuran ISO ${nb(iso.size)} byte, seharusnya ${nb(ISO_SIZE)} byte: ini bukan dump yang dibutuhkan (Redump, 1 file .iso).`;
 }
 
+// ---- which release an ISO is: SHA-1 of a few 2048-byte blocks (universal/ident.py), first 16 hex digits
+const IDENT = /*IDENT*/{"probes":[4433027072,4662278144],"known":[{"id":"jp","label":"ISO Jepang asli","family":"jp","version":null,"sha1":["db6f9a544c0aba93","86c17b3372faade7"]},{"id":"v0.97","label":"ISO Indonesia v0.97","family":"full","version":"0.97","sha1":["331ea993cdc29582","86c17b3372faade7"]},{"id":"v0.98","label":"ISO Indonesia v0.98","family":"full","version":"0.98","sha1":["2420d94613a054f6","86c17b3372faade7"]},{"id":"v0.98-k","label":"ISO Indonesia v0.98 + Koban x10","family":"koban","version":"0.98","sha1":["2420d94613a054f6","1b342c78210d0a52"]},{"id":"v0.98-ks","label":"ISO Indonesia v0.98 + Koban x10 SAFE","family":"koban-safe","version":"0.98","sha1":["2420d94613a054f6","b93ccee58bc4945c"]},{"id":"v0.99","label":"ISO Indonesia v0.99","family":"full","version":"0.99","sha1":["d4c89dafdf0d719f","86c17b3372faade7"]},{"id":"v0.99-k","label":"ISO Indonesia v0.99 + Koban x10","family":"koban","version":"0.99","sha1":["d4c89dafdf0d719f","b93ccee58bc4945c"]},{"id":"v0.99-d","label":"ISO Indonesia v0.99 deskripsi item","family":"desc","version":"0.99","sha1":["681371818f193ea3","86c17b3372faade7"]},{"id":"v0.99-t","label":"ISO Indonesia v0.99 dari CHD (OPL)","family":"full-chd","version":"0.99","sha1":["0cb5ede3050e38be","86c17b3372faade7"]},{"id":"v0.99-kt","label":"ISO Indonesia v0.99 + Koban x10 dari CHD (OPL)","family":"koban-chd","version":"0.99","sha1":["0cb5ede3050e38be","b93ccee58bc4945c"]},{"id":"v0.99.1","label":"ISO Indonesia v0.99.1","family":"full","version":"0.99.1","sha1":["970e9f7a4f91f63b","86c17b3372faade7"]},{"id":"v0.99.1-k","label":"ISO Indonesia v0.99.1 + Koban x10","family":"koban","version":"0.99.1","sha1":["970e9f7a4f91f63b","b93ccee58bc4945c"]},{"id":"v0.99.1-d","label":"ISO Indonesia v0.99.1 deskripsi item","family":"desc","version":"0.99.1","sha1":["e0cfae58179b1124","86c17b3372faade7"]},{"id":"v0.99.1-t","label":"ISO Indonesia v0.99.1 dari CHD (OPL)","family":"full-chd","version":"0.99.1","sha1":["6e591b3cf2f6362e","86c17b3372faade7"]},{"id":"v0.99.1-kt","label":"ISO Indonesia v0.99.1 + Koban x10 dari CHD (OPL)","family":"koban-chd","version":"0.99.1","sha1":["6e591b3cf2f6362e","b93ccee58bc4945c"]}]}/*IDENT*/;
+let ident = null, identDone = false;        // ident: an IDENT.known entry, null = not recognised
+async function identify(file) {
+  ident = null; identDone = false;
+  if (!IDENT.probes.length || file.size !== ISO_SIZE || !crypto.subtle) { identDone = true; return; }
+  const hs = [];
+  for (const off of IDENT.probes) {
+    const b = await file.slice(off, off + 2048).arrayBuffer();
+    hs.push([...new Uint8Array(await crypto.subtle.digest('SHA-1', b))].map(x => x.toString(16).padStart(2, '0')).join(''));
+  }
+  if (file !== iso) return;
+  ident = IDENT.known.find(k => k.sha1.every((h, i) => hs[i].startsWith(h))) || null;
+  identDone = true;
+}
+// what the chosen patch is, from its release name: full / updater, variant family, versions
+function patchKind(name) {
+  const n = (name || '').toLowerCase();
+  let m = /^basara2_id_v([0-9.]+?)(koban)?_to_v([0-9.]+?)(?:koban)?(_deskripsi_item)?\.xdelta$/.exec(n);
+  if (m) return { updater: true, from: m[1], to: m[3], family: m[4] ? 'desc' : m[2] ? 'koban' : 'full' };
+  m = /^basara2_id_v([0-9.]+?)(_koban10_safe|_deskripsi_item)?\.xdelta$/.exec(n);
+  if (m) return { updater: false, to: m[1], family: m[2] === '_deskripsi_item' ? 'desc' : m[2] ? 'koban' : 'full' };
+  return null;
+}
+const FAMILY = { full: 'terjemahan lengkap', koban: 'terjemahan + koban x10', desc: 'deskripsi item' };
+// an ISO + patch pair that cannot give the right result (only when the ISO was recognised)
+function pairProblem() {
+  if (!iso || !patch || !ident) return '';
+  const k = patchKind(patch.name);
+  if (!k) return '';
+  if (k.updater && !(ident.family === k.family && ident.version === k.from))
+    return `File patch ini updater: hanya untuk ISO Indonesia v${k.from} (${FAMILY[k.family]}). ISO-mu: ${ident.label}. ` +
+      `Pakai patch penuh: <a href="${k.family === 'desc' ? FULL_DESC : k.family === 'koban' ? FULL_KOBAN : FULL_PATCH}">unduh patch penuh</a>.`;
+  if (!k.updater && k.family === 'desc' && ident.family !== 'jp' && ident.family !== 'desc')
+    return `Patch deskripsi item butuh ISO Jepang asli (atau ISO deskripsi item versi lama). ISO-mu: ${ident.label}.`;
+  return '';
+}
+
 function refresh() {
-  const bad = isoProblem();
+  const bad = isoProblem(), pair = pairProblem();
   if (bad) status('iso-st', '✗ ' + bad, 'bad');
-  else if (iso && hdr) status('iso-st', '✓ ISO dipilih.', 'ok');
+  else if (iso && !identDone) status('iso-st', 'Memeriksa versi ISO…', '');
+  else if (iso && IDENT.probes.length) status('iso-st', ident ? `✓ Terdeteksi: ${ident.label}.` + (ident.family === 'jp' ? '' : ' Patch penuh akan menimpanya.')
+    : '✓ ISO dipilih (versinya tidak dikenali: dump lain atau sudah diubah; patch penuh tetap bisa dicoba).', ident ? 'ok' : '');
+  else if (iso) status('iso-st', '✓ ISO dipilih.', 'ok');
+  $('pair').innerHTML = pair; $('pair').hidden = !pair;
   $('iso-fix').innerHTML = bad && iso.size < ISO_SIZE ? `ISO yang terpotong tidak bisa dipatch. Kalau ini ISO hasil patch
-    sebelumnya, pakai patch penuh dengan ISO Jepang asli:<br><a href="${FULL_PATCH}">Unduh patch penuh v0.99.1 (540 MB)</a><br>
+    sebelumnya, pakai patch penuh dengan ISO Jepang asli:<br><a href="${FULL_PATCH}">Unduh patch penuh v0.99.1 (519 MB)</a><br>
     Kalau ini ISO Jepang aslinya, salin atau unduh ulang sampai utuh.` : '';
   $('iso-fix').hidden = !$('iso-fix').innerHTML;
-  $('go').disabled = busy || !CAN || !(iso && hdr) || !!bad;
+  $('go').disabled = busy || !CAN || !(iso && hdr) || !!bad || !!pair || (iso && !identDone);
 }
 
 // this patcher accepts ONLY .xdelta: require the VCDIFF (xdelta3) magic D6 C3 C4
@@ -173,7 +221,9 @@ $('iso').addEventListener('change', e => {
   iso = e.target.files[0] || null;
   $('iso-name').textContent = iso ? `${iso.name} · ${gb(iso.size)}` : '';
   status('iso-st', '');
+  identDone = !iso;
   refresh();
+  if (iso) identify(iso).catch(() => { identDone = true; }).finally(refresh);
 });
 
 $('patch').addEventListener('change', async e => {
@@ -183,7 +233,11 @@ $('patch').addEventListener('change', async e => {
   if (patch) {
     try {
       hdr = await readPatchInfo(patch);
-      status('patch-st', `✓ Patch xdelta${hdr.version ? ' v' + hdr.version : ''}. Pakai ISO Jepang asli.`, 'ok');
+      const k = patchKind(patch.name);
+      status('patch-st', `✓ Patch xdelta${hdr.version ? ' v' + hdr.version : ''}. ` + (!k ? 'Pakai ISO Jepang asli.'
+        : k.updater ? `Updater: hanya untuk ISO Indonesia v${k.from} (${FAMILY[k.family]}).`
+        : k.family === 'desc' ? 'Untuk ISO Jepang asli (atau ISO deskripsi item versi lama).'
+        : 'Untuk ISO Jepang asli atau ISO Indonesia versi mana pun.'), 'ok');
     } catch (err) { status('patch-st', '✗ ' + err.message, 'bad'); }
   }
   refresh();
