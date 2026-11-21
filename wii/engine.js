@@ -451,15 +451,17 @@
     list.push({ start: fstOff, ...bytesSrc(newFst) });
     const logical = new Segs(list), end = pos;
     const nclu = Math.ceil(end / CD), ngrp = Math.ceil(nclu / 64);
-    // ---- disc header, gap, partition header
-    const total = POFF + 0x20000 + nclu * CL;
+    // ---- disc header, gap, partition header. The partition goes where the patch says (v0.99.1: 0x50000, right
+    //      after the region info, so the ISO stays below 4 GiB for FAT32 SD cards); older patches: 0xF800000
+    const opoff = man.poff || POFF;
+    const total = opoff + 0x20000 + nclu * CL;
     let written = 0;
     const out = async u8 => { const k = u8.length; await env.write(u8); written += k; };
     const disc = r.readRaw(0, 0x50000);
     disc.fill(0, 0x40000, 0x40040);
-    put32be(disc, 0x40000, 1); put32be(disc, 0x40004, 0x40020 / 4); put32be(disc, 0x40020, POFF / 4);
+    put32be(disc, 0x40000, 1); put32be(disc, 0x40004, 0x40020 / 4); put32be(disc, 0x40020, opoff / 4);
     await out(disc);
-    for (let left = POFF - 0x50000; left > 0;) { const k = Math.min(left, 8 << 20); await out(new Uint8Array(k)); left -= k; }
+    for (let left = opoff - 0x50000; left > 0;) { const k = Math.min(left, 8 << 20); await out(new Uint8Array(k)); left -= k; }
     const ph = r.readRaw(POFF, 0x20000);
     const tmdOff = be32(ph, 0x2A8) * 4;
     ph.set(newTmd, tmdOff);
