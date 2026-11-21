@@ -17,11 +17,14 @@ Ambil file dari halaman **[Releases](../../releases/latest)**:
 
 | File | Isi |
 |---|---|
-| `basara2_id_v0.98.patch` / `.xdelta` | terjemahan saja (disarankan) |
-| `basara2_id_v0.98_koban10.patch` / `.xdelta` | terjemahan + koban (uang) ×10 |
+| `basara2_id_v0.99.1.xdelta` | terjemahan saja (disarankan) |
+| `basara2_id_v0.99.1_koban10_safe.xdelta` | terjemahan + koban (uang) ×10, dibatasi 999.999 |
+| `basara2_id_v0.99.1_deskripsi_item.xdelta` | hanya deskripsi item; nama, cerita dan menu tetap Jepang |
+| `basara2_id_v0.99_to_v0.99.1*.xdelta` | updater kecil dari ISO v0.99 hasil patch (biasa, koban, deskripsi) |
+| `basara2_id_v0.98*_to_v0.99.1*.xdelta` | updater dari ISO v0.98 hasil patch (biasa, koban) |
 
-Format `.patch` dipakai dengan `patcher.html` (browser) atau `apply_patch.py`; format `.xdelta` dengan xdelta UI,
-DeltaPatcher atau `xdelta3`. Hasil keduanya identik.
+v0.99.1 memperbaiki crash/freeze setelah layar rampasan di mode Penyatuan (PS2 asli freeze, emulator Android
+force close). Pasang `.xdelta` dengan [`patcher.html`](patcher.html) (browser), xdelta UI, DeltaPatcher atau `xdelta3`.
 
 ## ISO yang dibutuhkan
 
@@ -39,10 +42,9 @@ Checksum ISO hasil patch ada di [`checksums.txt`](checksums.txt).
 ## Cara memasang
 
 1. **patcher.html** (Windows, macOS, Linux, Android): buka [`patcher.html`](patcher.html) di Chrome/Edge (atau
-   Firefox/Safari), pilih ISO asli dan file `.patch`, lalu klik *Patch sekarang*. Semua proses berjalan di perangkatmu;
+   Firefox/Safari), pilih ISO asli dan file `.xdelta`, lalu klik *Patch sekarang*. Semua proses berjalan di perangkatmu;
    tidak ada file yang diunggah.
-2. **xdelta**: `xdelta3 -d -s "ISO asli.iso" basara2_id_v0.98.xdelta "ISO hasil.iso"`
-3. **Python**: `python apply_patch.py "ISO asli.iso" "ISO hasil.iso" basara2_id_v0.98.patch`
+2. **xdelta**: `xdelta3 -d -s "ISO asli.iso" basara2_id_v0.99.1.xdelta "ISO hasil.iso"`
 
 Mainkan ISO hasil patch di PCSX2, ARMSX2 / AetherSX2 / NetherSX2, atau PS2 asli lewat OPL. Save memory card versi
 Jepang tetap bisa dipakai.
@@ -50,19 +52,18 @@ Jepang tetap bisa dipakai.
 ## Versi Wii
 
 Terjemahan yang sama untuk disk **Heroes** dari *Sengoku Basara 2 Heroes Double Pack* (Wii, Jepang, ID `RBSJ08`).
-File ada di rilis **[wii-v0.99](../../releases/tag/wii-v0.99)**: `basara2_wii_id_v0.99.patch`, `patch_wii.py` dan
-`CARA_PATCH_WII.txt`.
+File ada di rilis **[wii-v0.99.1](../../releases/tag/wii-v0.99.1)**: `basara2_wii_id_v0.99.1.patch`, `patch_wii.py` dan
+`CARA_PATCH_WII.txt`. Sudah punya ISO Wii v0.99 hasil patch? Cukup updater `basara2_wii_id_v0.99_to_v0.99.1.patch`
+(442 KB), dipasang ke ISO v0.99 itu; hasilnya sama persis dengan patch penuh.
 
-1. Siapkan game milikmu sebagai **ISO** atau **RVZ**. ISO butuh **common key Wii** (isi disk Wii terenkripsi);
-   kuncinya tersedia di patcher Wii (tombol *Salin & pakai*). RVZ tidak butuh kunci. WBFS
+1. Siapkan game milikmu sebagai **ISO** atau **RVZ** (keduanya langsung bisa, tanpa kunci). WBFS
    diubah dulu di Dolphin: *Convert File*, Format RVZ, Compression Zstandard.
-2. Pasang patch lewat [`patcher-wii.html`](patcher-wii.html) di Chrome/Edge (PC atau HP Android; untuk ISO tekan
-   *Salin & pakai* di kolom common key), atau
-   `python patch_wii.py "game.iso" "hasil.iso" basara2_wii_id_v0.99.patch` (kunci dari file `.env` berisi
-   `WII_COMMON_KEY=...`, `--key=...`, atau ditempel saat diminta).
+2. Pasang patch lewat [`patcher-wii.html`](patcher-wii.html) di Chrome/Edge (PC atau HP Android), atau
+   `python patch_wii.py "game.iso" "hasil.iso" basara2_wii_id_v0.99.1.patch`.
 3. Mainkan ISO hasil di Dolphin (PC/Android), atau di Wii asli lewat USB Loader GX / WiiFlow dengan cIOS.
 
-Hasil patch: ISO 4.454.055.936 byte, SHA-1 `725DF73E8C93CFB8D5C97A15E1FFA229E402D9A5`. Dolphin Android kadang memunculkan peringatan
+Hasil patch: ISO 4.194.336.768 byte (di bawah 4 GB, muat di kartu SD FAT32), SHA-1 `F373C3963B7B731060C03615CFDD1B2C28A4FEAB`. Di aplikasi Android
+B2HWii, impor ulang ISO v0.99.1 supaya perbaikannya terpakai. Dolphin Android kadang memunculkan peringatan
 "Reg -1"; itu bug JIT Dolphin yang juga muncul di game asli. Tekan *Ignore for this session* atau matikan
 *Use Panic Handlers*.
 
