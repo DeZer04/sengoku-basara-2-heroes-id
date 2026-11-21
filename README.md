@@ -52,16 +52,18 @@ Jepang tetap bisa dipakai.
 ## Versi Wii
 
 Terjemahan yang sama untuk disk **Heroes** dari *Sengoku Basara 2 Heroes Double Pack* (Wii, Jepang, ID `RBSJ08`).
-File ada di rilis **[wii-v0.99](../../releases/tag/wii-v0.99)**: `basara2_wii_id_v0.99.patch`, `patch_wii.py` dan
-`CARA_PATCH_WII.txt`.
+File ada di rilis **[wii-v0.99.1](../../releases/tag/wii-v0.99.1)**: `basara2_wii_id_v0.99.1.patch`, `patch_wii.py` dan
+`CARA_PATCH_WII.txt`. Sudah punya ISO Wii v0.99 hasil patch? Cukup updater `basara2_wii_id_v0.99_to_v0.99.1.patch`
+(442 KB), dipasang ke ISO v0.99 itu; hasilnya sama persis dengan patch penuh.
 
 1. Siapkan game milikmu sebagai **ISO** atau **RVZ** (keduanya langsung bisa, tanpa kunci). WBFS
    diubah dulu di Dolphin: *Convert File*, Format RVZ, Compression Zstandard.
 2. Pasang patch lewat [`patcher-wii.html`](patcher-wii.html) di Chrome/Edge (PC atau HP Android), atau
-   `python patch_wii.py "game.iso" "hasil.iso" basara2_wii_id_v0.99.patch`.
+   `python patch_wii.py "game.iso" "hasil.iso" basara2_wii_id_v0.99.1.patch`.
 3. Mainkan ISO hasil di Dolphin (PC/Android), atau di Wii asli lewat USB Loader GX / WiiFlow dengan cIOS.
 
-Hasil patch: ISO 4.454.055.936 byte, SHA-1 `725DF73E8C93CFB8D5C97A15E1FFA229E402D9A5`. Dolphin Android kadang memunculkan peringatan
+Hasil patch: ISO 4.194.336.768 byte (di bawah 4 GB, muat di kartu SD FAT32), SHA-1 `F373C3963B7B731060C03615CFDD1B2C28A4FEAB`. Di aplikasi Android
+B2HWii, impor ulang ISO v0.99.1 supaya perbaikannya terpakai. Dolphin Android kadang memunculkan peringatan
 "Reg -1"; itu bug JIT Dolphin yang juga muncul di game asli. Tekan *Ignore for this session* atau matikan
 *Use Panic Handlers*.
 
