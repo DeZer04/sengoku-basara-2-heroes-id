@@ -228,6 +228,12 @@
       if (game < 0) fail('Partisi game tidak ditemukan: dump ini tidak sesuai.');
       const ph = read(game, 0x2C0);
       this.base = game + be32(ph, 0x2B8) * 4; this.size = be32(ph, 0x2BC) * 4;
+      // a copy cut short (FAT32 SD card: 4 GB per file, or an unfinished download) only fails at its end, so it is
+      // caught here, before anything is written
+      if (read(this.base + this.size - 1, 1).length < 1)
+        fail(`ISO terpotong: file game kurang dari ${(this.base + this.size).toLocaleString('id-ID')} byte (biasanya karena ` +
+             'tersimpan di kartu SD FAT32 yang maksimal 4 GB per file, atau salinan/unduhan belum selesai). ' +
+             'Pakai file yang utuh, atau patch penuh dengan dump asli (RVZ, di bawah 4 GB).');
       if (!titleKey) {
         if (!commonKey || commonKey.length !== 16) fail('ISO Wii butuh common key Wii: tempel dulu kuncinya di kolom kunci.');
         if (ph[0x1F1] !== 0) fail('Disk ini memakai kunci selain common key Wii biasa.');
