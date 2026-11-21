@@ -285,8 +285,9 @@
     let game = -1;
     for (let k = 0; k < nP; k++) if (be32(ents, 8 * k + 4) === 0) game = be32(ents, 8 * k) * 4;
     if (game < 0) fail('Partisi game tidak ditemukan: dump ini tidak sesuai.');
-    const ph = await get(game, 0x2C0);
-    await get(game + be32(ph, 0x2B8) * 4, Math.min(64, be32(ph, 0x2BC) * 4 / CL) * CL);
+    const ph = await get(game, 0x2C0), base = game + be32(ph, 0x2B8) * 4;
+    await get(base, Math.min(64, be32(ph, 0x2BC) * 4 / CL) * CL);
+    await get(base + be32(ph, 0x2BC) * 4 - 1, 1);     // the ISO constructor's "cut short?" check reads the last byte
     return new ISO((o, n) => (got.get(o) || fail('ISO tidak terbaca.')).subarray(0, n), commonKey);
   }
 
