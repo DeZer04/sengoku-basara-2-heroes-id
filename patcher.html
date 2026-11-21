@@ -263,7 +263,10 @@ async function runXdeltaFlow(handle) {
   }
   prog(1); $('stage-t').textContent = sink.kind === 'blob' ? 'Unduhan dimulai.' : 'Selesai.';
   message(`<b>Berhasil!</b> ISO terjemahan ${sink.kind === 'file' ? 'tersimpan' : 'diunduh'} sebagai
-    <code>${sink.kind === 'file' ? sink.name : outName()}</code>. Buka di PCSX2, ARMSX2, AetherSX2/NetherSX2 atau OPL.`, 'ok');
+    <code>${sink.kind === 'file' ? sink.name : outName()}</code>.${sink.kind === 'file' ? '' : ' Tunggu sampai unduhan di browser selesai.'}
+    Ukuran file yang utuh: <b>${iso.size.toLocaleString('id-ID')} byte</b>${sink.kind === 'file' ? '' : '. Kalau lebih kecil,'
+    + ' unduhan terputus (layar mati / Chrome ke latar belakang): ISO itu bisa macet di tengah permainan, ulangi patch'}.
+    Buka di PCSX2, ARMSX2, AetherSX2/NetherSX2 atau OPL.`, 'ok');
 }
 
 $('go').addEventListener('click', async () => {
