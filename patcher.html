@@ -41,6 +41,9 @@ header p { margin: 4px 0 0; color: var(--muted); }
 .file { margin-top: 8px; font-size: .9rem; color: var(--muted); word-break: break-all; }
 .st { margin-top: 6px; font-size: .92rem; }
 .st.ok { color: var(--ok); } .st.bad { color: var(--bad); }
+.fix { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--bad); border-radius: 8px; font-size: .9rem; line-height: 1.5; }
+.fix a { display: inline-block; margin: 6px 0 2px; padding: 6px 12px; border-radius: 6px; background: var(--bad); color: #fff;
+         font-weight: 700; text-decoration: none; }
 button#go { width: 100%; border: 0; border-radius: 10px; padding: 14px; font: inherit; font-weight: 700; font-size: 1.05rem;
             background: var(--accent); color: var(--accent-fg); cursor: pointer; }
 button#go:disabled { opacity: .45; cursor: not-allowed; }
@@ -78,6 +81,7 @@ code { font-size: .88em; }
     <label class="pick">Pilih file ISO<input type="file" id="iso"></label>
     <div class="file" id="iso-name"></div>
     <div class="st" id="iso-st"></div>
+    <div class="fix" id="iso-fix" hidden></div>
   </section>
 
   <section class="step">
@@ -128,9 +132,27 @@ const gb = n => (n / 1e9).toLocaleString('id-ID', { maximumFractionDigits: 2 }) 
 const mb = n => Math.round(n / 1e6).toLocaleString('id-ID') + ' MB';
 function status(id, text, cls) { $(id).textContent = text; $(id).className = 'st ' + (cls || ''); }
 
+// every source ISO of these patches (Japanese original, v0.98, v0.99) is the Redump image of 4,677,795,840 bytes; a
+// smaller file was cut short (unfinished download or copy, FAT32 card) and would patch into a broken ISO
+const ISO_SIZE = 4677795840;
+const FULL_PATCH = 'https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/download/v0.99.1/basara2_id_v0.99.1.xdelta';
+const nb = n => n.toLocaleString('id-ID');
+function isoProblem() {
+  if (!iso || iso.size === ISO_SIZE) return '';
+  return iso.size < ISO_SIZE
+    ? `ISO terpotong: ${nb(iso.size)} byte, seharusnya ${nb(ISO_SIZE)} byte (salinan/unduhan belum selesai, atau kartu SD FAT32 yang maksimal 4 GB per file).`
+    : `Ukuran ISO ${nb(iso.size)} byte, seharusnya ${nb(ISO_SIZE)} byte: ini bukan dump yang dibutuhkan (Redump, 1 file .iso).`;
+}
+
 function refresh() {
-  if (iso && hdr) status('iso-st', '✓ ISO dipilih.', 'ok');
-  $('go').disabled = busy || !CAN || !(iso && hdr);
+  const bad = isoProblem();
+  if (bad) status('iso-st', '✗ ' + bad, 'bad');
+  else if (iso && hdr) status('iso-st', '✓ ISO dipilih.', 'ok');
+  $('iso-fix').innerHTML = bad && iso.size < ISO_SIZE ? `ISO yang terpotong tidak bisa dipatch. Kalau ini ISO hasil patch
+    sebelumnya, pakai patch penuh dengan ISO Jepang asli:<br><a href="${FULL_PATCH}">Unduh patch penuh v0.99.1 (540 MB)</a><br>
+    Kalau ini ISO Jepang aslinya, salin atau unduh ulang sampai utuh.` : '';
+  $('iso-fix').hidden = !$('iso-fix').innerHTML;
+  $('go').disabled = busy || !CAN || !(iso && hdr) || !!bad;
 }
 
 // this patcher accepts ONLY .xdelta: require the VCDIFF (xdelta3) magic D6 C3 C4

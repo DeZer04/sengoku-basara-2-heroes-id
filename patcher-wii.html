@@ -42,6 +42,9 @@ header p { margin: 4px 0 0; color: var(--muted); }
 .pick:focus-within { outline: 2px solid var(--gold); outline-offset: 2px; }
 .file { margin-top: 8px; font-size: .9rem; color: var(--muted); word-break: break-all; }
 .st { margin-top: 6px; font-size: .92rem; }
+.fix { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--bad); border-radius: 8px; font-size: .9rem; line-height: 1.5; }
+.fix a { display: inline-block; margin: 6px 0 2px; padding: 6px 12px; border-radius: 6px; background: var(--bad); color: #fff;
+         font-weight: 700; text-decoration: none; }
 .hint { margin: 10px 0 0; font-size: .88rem; color: var(--muted); }
 .hint a { color: inherit; }
 .st.ok { color: var(--ok); } .st.bad { color: var(--bad); }
@@ -79,6 +82,7 @@ code { font-size: .88em; }
     <label class="pick">Pilih file .iso / .rvz<input type="file" id="rvz"></label>
     <div class="file" id="rvz-name"></div>
     <div class="st" id="rvz-st"></div>
+    <div class="fix" id="rvz-fix" hidden></div>
   </section>
 
   <section class="step">
@@ -136,7 +140,7 @@ const gb = n => (n / 1e9).toLocaleString('id-ID', { maximumFractionDigits: 2 }) 
 const mb = n => Math.round(n / 1e6).toLocaleString('id-ID') + ' MB';
 const str = (u8, a, b) => String.fromCharCode(...u8.subarray(a, b));
 function status(id, text, cls) { $(id).textContent = text; $(id).className = 'st ' + (cls || ''); }
-function refresh() { $('go').disabled = busy || !CAN || !(rvzOk && (kind !== 'iso' || keyOk) && hdr); }
+function refresh() { $('go').disabled = busy || !CAN || pairBad || !(rvzOk && (kind !== 'iso' || keyOk) && hdr); }
 
 function threads() {
   let n = Math.max(1, Math.min(6, (navigator.hardwareConcurrency || 4) - 1));
@@ -151,11 +155,31 @@ async function checkGame(f) {
   if (m === 'RVZ\x01' || m === 'WIA\x01') {          // only the format is looked at: no game ID or dump checks
     const comp = (h[0x4C] << 24) | (h[0x4D] << 16) | (h[0x4E] << 8) | h[0x4F];
     if (comp !== 0 && comp !== 5) throw new Error('RVZ ini memakai kompresi selain Zstandard. Konversi ulang di Dolphin dengan Compression: Zstandard.');
+    const u32 = o => ((h[o] << 24) | (h[o + 1] << 16) | (h[o + 2] << 8) | h[o + 3]) >>> 0;
+    const want = u32(0x2C) * 0x100000000 + u32(0x30);   // header 1: the .rvz file's own size
+    if (f.size < want) throw new Error(`RVZ terpotong: ${nb(f.size)} byte, seharusnya ${nb(want)} byte. Salin atau unduh ulang file RVZ-mu sampai utuh.`);
     return 'rvz';
   }
   if (h[0x18] === 0x5D && h[0x19] === 0x1C && h[0x1A] === 0x9E && h[0x1B] === 0xA3) return 'iso';
   if (m === 'WBFS') throw new Error('Ini file WBFS. Ubah dulu ke ISO atau RVZ di Dolphin (lihat Bantuan).');
   throw new Error('File ini bukan ISO Wii atau RVZ (lihat Bantuan).');
+}
+
+// a game file cut short (unfinished download or copy, FAT32 card) or an updater on the wrong file: say so at once and
+// point to the full patch, which goes on the original dump
+const FULL_PATCH = 'https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/download/wii-v0.99.1/basara2_wii_id_v0.99.1.patch';
+const FULL_LINK = `<a href="${FULL_PATCH}">Unduh patch penuh v0.99.1 (729 MB)</a>`;
+const nb = n => n.toLocaleString('id-ID');
+function fixHint(html) { $('rvz-fix').innerHTML = html || ''; $('rvz-fix').hidden = !html; }
+let pairBad = false;
+function checkPair() {          // an updater (manifest 'src') only fits the previous release's ISO, never an RVZ dump
+  pairBad = !!(hdr && hdr.updater && kind === 'rvz');
+  if (pairBad) {
+    status('patch-st', `✗ Ini updater: hanya untuk ISO Wii v${hdr.from || '0.99'} hasil patch, bukan RVZ/dump asli.`, 'bad');
+    fixHint(`Untuk dump asli (RVZ/ISO bersih) pakai patch penuh:<br>${FULL_LINK}`);
+  } else if (hdr) {
+    status('patch-st', `✓ Patch Wii v${hdr.version}${hdr.updater ? ' (updater dari v' + (hdr.from || '0.99') + ')' : ''} · hasil ISO ${gb(hdr.size)}.`, 'ok');
+  }
 }
 
 // the Wii common key: ISO input is decrypted with it, built in (as in Dolphin), so ISO works like RVZ
@@ -170,7 +194,13 @@ async function checkKey() {
     await WiiPatch.isoKeyCheck(async (o, n) => new Uint8Array(await rvz.slice(o, o + n).arrayBuffer()), WiiPatch.parseKey(COMMON_KEY));
     if (my !== keyRun) return;
     keyOk = true; status('rvz-st', '✓ ISO Wii dipilih.', 'ok');
-  } catch (err) { if (my === keyRun) status('rvz-st', '✗ ' + (err && err.message || err), 'bad'); }
+  } catch (err) {
+    if (my !== keyRun) return;
+    const msg = String(err && err.message || err);
+    status('rvz-st', '✗ ' + msg, 'bad');
+    if (msg.startsWith('ISO terpotong')) fixHint(`ISO yang terpotong tidak bisa dipatch. Kalau ini ISO hasil patch sebelumnya, pakai
+      patch penuh dengan dump asli (RVZ dari Dolphin atau ISO bersih):<br>${FULL_LINK}<br>Kalau ini dump aslinya, salin atau unduh ulang sampai utuh.`);
+  }
   refresh();
 }
 
@@ -182,7 +212,7 @@ async function readPatchInfo(p) {
   }
   const ml = h[8] | (h[9] << 8) | (h[10] << 16) | (h[11] << 24);
   const man = JSON.parse(new TextDecoder().decode(await p.slice(12, 12 + ml).arrayBuffer()));
-  return { version: man.version || '', size: man.iso[0] };
+  return { version: man.version || '', size: man.iso[0], updater: !!man.src, from: man.from || '' };
 }
 
 $('mode').textContent = !CAN ? 'Browser ini tidak didukung. Pakai Chrome, Edge atau Firefox versi terbaru (halaman harus dibuka lewat https).'
@@ -192,7 +222,7 @@ $('mode').textContent = !CAN ? 'Browser ini tidak didukung. Pakai Chrome, Edge a
 $('rvz').addEventListener('change', async e => {
   rvz = e.target.files[0] || null; rvzOk = false; kind = ''; keyOk = false;
   $('rvz-name').textContent = rvz ? `${rvz.name} · ${gb(rvz.size)}` : '';
-  status('rvz-st', '');
+  status('rvz-st', ''); fixHint('');
   refresh();
   if (!rvz) return;
   try {
@@ -200,6 +230,7 @@ $('rvz').addEventListener('change', async e => {
     if (kind === 'iso') await checkKey();
     else status('rvz-st', '✓ RVZ Wii dipilih.', 'ok');
   } catch (err) { status('rvz-st', '✗ ' + err.message, 'bad'); }
+  checkPair();
   refresh();
 });
 
@@ -209,7 +240,8 @@ $('patch').addEventListener('change', async e => {
   status('patch-st', '');
   refresh();
   if (!patch) return;
-  try { hdr = await readPatchInfo(patch); status('patch-st', `✓ Patch Wii v${hdr.version} · hasil ISO ${gb(hdr.size)}.`, 'ok'); }
+  if (!$('rvz-st').textContent.startsWith('✗')) fixHint('');
+  try { hdr = await readPatchInfo(patch); checkPair(); }
   catch (err) { status('patch-st', '✗ ' + err.message, 'bad'); }
   refresh();
 });
@@ -346,7 +378,9 @@ $('go').addEventListener('click', async () => {
       Buka di Dolphin (PC/Android).`, 'ok');
   } catch (err) {
     $('stage-t').textContent = 'Gagal.';
-    message('<b>Gagal:</b> ' + esc(err && err.message ? err.message : String(err)), 'bad');
+    const msg = err && err.message ? err.message : String(err);
+    message('<b>Gagal:</b> ' + esc(msg) + (/^(Patch ini updater|ISO terpotong)/.test(msg)
+      ? `<br>Untuk dump asli (RVZ/ISO bersih) pakai patch penuh: ${FULL_LINK}` : ''), 'bad');
   } finally {
     window.removeEventListener('beforeunload', guard);
     try { await lock?.release(); } catch (_) {}
