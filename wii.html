@@ -58,7 +58,15 @@
         </div>
       </div>
       <div class="dl-row">
-        <div><h3>Aplikasi Android (APK) <span class="tag">oleh Dwiki Aditya</span></h3><p>Buka ISO hasil Wii langsung di HP Android, tanpa Dolphin. Aplikasi pihak ketiga (B2HWii-Android). Sudah mengimpor ISO v0.99? <b>Impor ulang</b> ISO v0.99.1 supaya perbaikan crash rampasan terpakai.</p></div>
+        <div><h3>Aplikasi Android "Basara 2 Heroes ID" <span class="tag">Baru</span></h3><p>B2HWii-Android dengan terjemahan yang dipasang dari dalam aplikasi: pilih ISO/RVZ Jepang asli, <b>Ekstrak</b>, lalu <b>Unduh dan Pasang</b>. Tidak perlu membuat ISO hasil patch, dan update terjemahan berikutnya cukup updater kecil yang dicek otomatis. Bisa juga mengekstrak ISO Wii terjemahan v0.99/v0.99.1. Terpasang di samping aplikasi resmi; save-nya ikut terbawa. Android 10+, arm64.</p></div>
+        <div class="dl-links">
+          <a class="main" href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/download/android-v1.2.1-id1/basara2heroes-ID-1.2.1-id1-android-arm64.apk">APK · 82 MB</a>
+          <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/tag/android-v1.2.1-id1">Catatan rilis</a>
+          <a href="https://github.com/DeZer04/B2HWii-Android/tree/id-edition">Source (GPLv3)</a>
+        </div>
+      </div>
+      <div class="dl-row">
+        <div><h3>Aplikasi Android (APK) <span class="tag">oleh Dwiki Aditya</span></h3><p>Buka ISO hasil Wii langsung di HP Android, tanpa Dolphin. Aplikasi pihak ketiga (B2HWii-Android). Untuk ISO Wii terjemahan pilih <b>Baca dari File</b> (Read): mode Ekstrak di aplikasi ini gagal dengan "Couldn't read all of that file". Sudah mengimpor ISO v0.99? <b>Impor ulang</b> ISO v0.99.1 supaya perbaikan crash rampasan terpakai.</p></div>
         <div class="dl-links">
           <a class="main" href="https://github.com/PotatoRecomp/B2HWii-Android/releases">Unduh APK</a>
         </div>
@@ -101,7 +109,7 @@
       <div class="feat"><img src="assets/laga_sengit.jpg" width="512" height="448" loading="lazy" alt="Video promo LAGA SENGIT DIMULAI"><div><h3>Turnamen</h3><p>Video promo Turnamen Besar dan Laga Sengit, mode Turnamen Extreme, nama-nama petarung turnamen.</p></div></div>
     </div>
     <div class="plats" style="margin-top:20px">
-      <span class="plat">Dolphin (PC)</span><span class="plat">Dolphin (Android)</span><span class="plat">APK Android (Dwiki Aditya)</span><span class="plat">Wii asli (USB Loader GX / WiiFlow)</span>
+      <span class="plat">Dolphin (PC)</span><span class="plat">Dolphin (Android)</span><span class="plat">APK Basara 2 Heroes ID</span><span class="plat">APK Android (Dwiki Aditya)</span><span class="plat">Wii asli (USB Loader GX / WiiFlow)</span>
     </div>
   </div>
 </section>
@@ -110,7 +118,8 @@
   <div class="wrap">
     <h2>Tanya jawab (Wii)</h2>
     <details><summary>Dolphin Android memunculkan peringatan "Reg -1"?</summary><p>Itu bug JIT Dolphin Android, dan muncul juga di game asli tanpa patch. Tekan <b>Ignore for this session</b>, atau matikan Settings → Config → Interface → <b>Use Panic Handlers</b>.</p></details>
-    <details><summary>Bisa mem-patch langsung di HP?</summary><p>Bisa lewat patcher Wii di Chrome Android: pilih file <code>.iso</code>/<code>.rvz</code> dan <code>.patch</code>. Siapkan ruang kosong yang cukup dan biarkan layar menyala sampai selesai.</p></details>
+    <details><summary>Bisa mem-patch langsung di HP?</summary><p>Bisa lewat patcher Wii di Chrome Android: pilih file <code>.iso</code>/<code>.rvz</code> dan <code>.patch</code>. Siapkan ruang kosong yang cukup dan biarkan layar menyala sampai selesai. Atau pakai aplikasi <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/releases/tag/android-v1.2.1-id1">Basara 2 Heroes ID</a>: patch dipasang langsung ke game di dalam aplikasi, tanpa membuat ISO.</p></details>
+    <details><summary>Aplikasi B2HWii resmi gagal mengekstrak ISO Wii terjemahan?</summary><p>ISO Wii v0.99/v0.99.1 berakhir tepat di ujung partisi, dan aplikasi resmi membaca sedikit melewati akhir file saat mengekstrak file terakhir, sehingga muncul "Couldn't read all of that file". ISO-mu tidak rusak. Pilih <b>Baca dari File</b> di aplikasi resmi, atau pakai aplikasi Basara 2 Heroes ID yang sudah memperbaikinya.</p></details>
     <details><summary>Main di Wii asli?</summary><p>Lewat USB Loader GX atau WiiFlow dengan cIOS. ISO hasil memakai partisi fakesign; jalankan dengan loader yang mendukung (IOS dengan trucha/cIOS). Mau hemat ruang? Ubah ISO hasil ke RVZ (±3,8 GB).</p></details>
     <details><summary>Nemu bug atau typo?</summary><p>Laporkan lewat <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/issues">GitHub Issues</a> dengan screenshot dan lokasi kejadian (mode, stage, menu). Daftar lengkap perubahan dan masalah yang diketahui ada di <a href="https://github.com/DeZer04/sengoku-basara-2-heroes-id/blob/main/README_ID.txt">README_ID.txt</a>.</p></details>
   </div>
