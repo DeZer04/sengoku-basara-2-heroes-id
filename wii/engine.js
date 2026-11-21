@@ -394,6 +394,11 @@
       }
     })(1, n, '');
     const byName = Object.fromEntries(files.map(f => [f.name, f]));
+    // an updater (man.src: the sizes of the previous release's archives) only fits that release's ISO; on the
+    // original dump or another version it would write a broken mix, so it stops here (sizes only, no hashing)
+    for (const [name, size] of Object.entries(man.src || {}))
+      if (!byName[name] || byName[name].size !== size)
+        fail(`Patch ini updater: hanya untuk ISO Wii v${man.from || 'sebelumnya'} hasil patch (ukuran ${name} berbeda). Untuk dump asli pakai patch penuh.`);
     // main.dol with the patched ranges (first in the payload stream)
     const dh = rp(dolOff, 0x100);
     let dolSize = 0;
